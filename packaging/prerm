@@ -1,0 +1,21 @@
+#!/bin/sh
+set -e
+
+case "${1:-remove}" in
+    remove|upgrade|deconfigure) ;;
+    *) exit 0 ;;
+esac
+
+if command -v loginctl >/dev/null 2>&1; then
+    loginctl list-users --no-legend 2>/dev/null | while read -r uid user _; do
+        [ -n "$uid" ] || continue
+        runtime="/run/user/$uid"
+        [ -S "$runtime/bus" ] || continue
+        runuser -u "$user" -- env \
+            XDG_RUNTIME_DIR="$runtime" \
+            DBUS_SESSION_BUS_ADDRESS="unix:path=$runtime/bus" \
+            systemctl --user stop center-stage-engine.service >/dev/null 2>&1 || true
+    done
+fi
+
+exit 0

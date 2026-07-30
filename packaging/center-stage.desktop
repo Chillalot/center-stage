@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Center Stage
+Name[vi]=Center Stage
+Comment=Auto-framing virtual camera
+Comment[vi]=Camera ảo tự động căn khung hình
+Exec=center-stage
+Icon=center-stage
+Terminal=false
+Categories=AudioVideo;Video;
+StartupNotify=true

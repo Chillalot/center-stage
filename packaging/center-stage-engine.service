@@ -1,0 +1,14 @@
+[Unit]
+Description=Center Stage virtual camera engine
+PartOf=graphical-session.target
+StartLimitIntervalSec=30
+StartLimitBurst=3
+
+[Service]
+Type=simple
+Environment=PYTHONPATH=/opt/center-stage/app:/opt/center-stage/vendor
+ExecStart=/usr/bin/python3 -m center_stage.engine
+Restart=on-failure
+RestartSec=2
+NoNewPrivileges=true
+PrivateTmp=true

@@ -1,0 +1,190 @@
+"""V4L2 camera discovery and normalized hardware image controls."""
+
+from __future__ import annotations
+
+import re
+import subprocess
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Callable, Iterable
+
+from .config import CONTROL_NAMES
+
+CONTROL_LINE = re.compile(
+    r"^\s*(brightness|contrast|saturation|hue)\s+\S+\s+\(int\)\s+:\s+"
+    r"min=(-?\d+)\s+max=(-?\d+)\s+step=(\d+)\s+default=(-?\d+)\s+value=(-?\d+)"
+)
+
+
+@dataclass(frozen=True)
+class CameraControl:
+    name: str
+    minimum: int
+    maximum: int
+    step: int
+    default: int
+    value: int
+
+    def from_normalized(self, normalized: int) -> int:
+        normalized = max(-100, min(100, int(normalized)))
+        if normalized < 0:
+            raw = self.default + (self.default - self.minimum) * normalized / 100.0
+        else:
+            raw = self.default + (self.maximum - self.default) * normalized / 100.0
+        stepped = self.minimum + round((raw - self.minimum) / self.step) * self.step
+        return max(self.minimum, min(self.maximum, int(stepped)))
+
+    def to_normalized(self, raw: int) -> int:
+        raw = max(self.minimum, min(self.maximum, int(raw)))
+        if raw < self.default:
+            span = self.default - self.minimum
+            return -round((self.default - raw) * 100 / span) if span else 0
+        span = self.maximum - self.default
+        return round((raw - self.default) * 100 / span) if span else 0
+
+
+@dataclass(frozen=True)
+class CameraDevice:
+    camera_id: str
+    path: str
+    resolved_path: str
+    name: str
+    serial: str
+    kind: str
+
+
+def _run(arguments: list[str]) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(arguments, text=True, capture_output=True, check=False)
+
+
+def discover_cameras(
+    by_id_dir: Path = Path("/dev/v4l/by-id"),
+    sys_class_dir: Path = Path("/sys/class/video4linux"),
+    runner: Callable[[list[str]], subprocess.CompletedProcess[str]] = _run,
+) -> list[CameraDevice]:
+    candidates: Iterable[Path]
+    if by_id_dir.is_dir():
+        candidates = sorted(by_id_dir.glob("*-video-index0"))
+    else:
+        candidates = sorted(Path("/dev").glob("video*"))
+
+    devices: list[CameraDevice] = []
+    seen: set[str] = set()
+    for candidate in candidates:
+        try:
+            resolved = candidate.resolve(strict=True)
+        except (FileNotFoundError, OSError):
+            continue
+        if str(resolved) in seen:
+            continue
+        details = runner(["v4l2-ctl", "-d", str(candidate), "--all"])
+        output = f"{details.stdout}\n{details.stderr}"
+        if details.returncode != 0 or "Video Capture" not in output:
+            continue
+        if "v4l2 loopback" in output.lower() or "Metadata Capture" in _device_caps(output):
+            continue
+
+        video_name = resolved.name
+        sys_device = sys_class_dir / video_name / "device"
+        product, serial, removable = _usb_identity(sys_device)
+        fallback_name = _read_text(sys_class_dir / video_name / "name") or video_name
+        name = product or fallback_name.split(":", 1)[0]
+        kind = "integrated" if removable == "fixed" else "usb"
+        camera_id = candidate.name if by_id_dir.is_dir() else f"path-{resolved.name}"
+        devices.append(
+            CameraDevice(
+                camera_id=camera_id,
+                path=str(candidate),
+                resolved_path=str(resolved),
+                name=name,
+                serial=serial or camera_id,
+                kind=kind,
+            )
+        )
+        seen.add(str(resolved))
+    return devices
+
+
+def find_camera(camera_id: str | None) -> CameraDevice | None:
+    if not camera_id:
+        return None
+    return next((camera for camera in discover_cameras() if camera.camera_id == camera_id), None)
+
+
+def query_controls(
+    device: str,
+    runner: Callable[[list[str]], subprocess.CompletedProcess[str]] = _run,
+) -> dict[str, CameraControl]:
+    result = runner(["v4l2-ctl", "-d", device, "--list-ctrls"])
+    if result.returncode != 0:
+        return {}
+    controls: dict[str, CameraControl] = {}
+    for line in result.stdout.splitlines():
+        match = CONTROL_LINE.match(line)
+        if not match:
+            continue
+        name, minimum, maximum, step, default, value = match.groups()
+        controls[name] = CameraControl(
+            name=name,
+            minimum=int(minimum),
+            maximum=int(maximum),
+            step=max(1, int(step)),
+            default=int(default),
+            value=int(value),
+        )
+    return controls
+
+
+def set_normalized_control(
+    device: str,
+    control: CameraControl,
+    normalized: int,
+    runner: Callable[[list[str]], subprocess.CompletedProcess[str]] = _run,
+) -> bool:
+    raw = control.from_normalized(normalized)
+    result = runner(
+        ["v4l2-ctl", "-d", device, f"--set-ctrl={control.name}={raw}"]
+    )
+    return result.returncode == 0
+
+
+def apply_saved_controls(device: CameraDevice, values: dict[str, int]) -> dict[str, bool]:
+    available = query_controls(device.path)
+    return {
+        name: (
+            set_normalized_control(device.path, available[name], values.get(name, 0))
+            if name in available
+            else False
+        )
+        for name in CONTROL_NAMES
+    }
+
+
+def _device_caps(output: str) -> str:
+    marker = "Device Caps"
+    if marker not in output:
+        return ""
+    return output.split(marker, 1)[1].split("Media Driver Info", 1)[0]
+
+
+def _usb_identity(start: Path) -> tuple[str, str, str]:
+    try:
+        current = start.resolve(strict=True)
+    except (FileNotFoundError, OSError):
+        return "", "", "unknown"
+    for parent in (current, *current.parents):
+        removable_path = parent / "removable"
+        if removable_path.is_file():
+            return (
+                _read_text(parent / "product"),
+                _read_text(parent / "serial"),
+                _read_text(removable_path) or "unknown",
+            )
+    return "", "", "unknown"
+
+
+def _read_text(path: Path) -> str:
+    try:
+        return path.read_text(encoding="utf-8").strip()
+    except OSError:
+        return ""

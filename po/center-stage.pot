@@ -1,0 +1,128 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Center Stage 4.0.5\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Center Stage is off"
+msgstr ""
+
+msgid "Opening camera…"
+msgstr ""
+
+msgid "Center Stage is ready"
+msgstr ""
+
+msgid "The camera is being used by another application."
+msgstr ""
+
+msgid "The selected camera is not connected."
+msgstr ""
+
+msgid "The camera could not be opened."
+msgstr ""
+
+msgid "PipeWire cannot share the selected camera."
+msgstr ""
+
+msgid "The camera was disconnected."
+msgstr ""
+
+msgid "The Center Stage virtual camera is unavailable."
+msgstr ""
+
+msgid "Video is running, but PipeWire cannot see the virtual camera."
+msgstr ""
+
+msgid "The Center Stage PipeWire camera is unavailable."
+msgstr ""
+
+msgid "The virtual camera output could not be started."
+msgstr ""
+
+msgid "The v4l2loopback driver is not installed."
+msgstr ""
+
+msgid "Another device is using /dev/video10."
+msgstr ""
+
+msgid "The face detection model is missing."
+msgstr ""
+
+msgid "Input and output cameras cannot be the same."
+msgstr ""
+
+msgid "Center Stage is already running."
+msgstr ""
+
+msgid "The camera resolution changed unexpectedly."
+msgstr ""
+
+msgid "Center Stage stopped because of an internal error."
+msgstr ""
+
+msgid "The Center Stage background service is not installed."
+msgstr ""
+
+msgid "Brightness"
+msgstr ""
+
+msgid "Contrast"
+msgstr ""
+
+msgid "Saturation"
+msgstr ""
+
+msgid "Hue"
+msgstr ""
+
+msgid "Input camera"
+msgstr ""
+
+msgid "Settings"
+msgstr ""
+
+msgid "Choose a camera, then select Start to create your virtual camera."
+msgstr ""
+
+msgid "Start"
+msgstr ""
+
+msgid "Auto Zoom"
+msgstr ""
+
+msgid "Mirror Output"
+msgstr ""
+
+msgid "Language"
+msgstr ""
+
+msgid "Image Settings"
+msgstr ""
+
+msgid "Reset Image Settings"
+msgstr ""
+
+msgid "Integrated camera"
+msgstr ""
+
+msgid "External USB camera"
+msgstr ""
+
+msgid "Not supported by this camera"
+msgstr ""
+
+msgid "Checking camera controls…"
+msgstr ""
+
+msgid "Select a connected camera first."
+msgstr ""
+
+msgid "Restarting…"
+msgstr ""
+
+msgid "Starting…"
+msgstr ""
+
+msgid "Stop"
+msgstr ""

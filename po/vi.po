@@ -1,0 +1,134 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Center Stage 4.0.5\n"
+"PO-Revision-Date: 2026-07-30 00:00+0700\n"
+"Last-Translator: Center Stage Local\n"
+"Language-Team: Vietnamese\n"
+"Language: vi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "Center Stage is off"
+msgstr "Center Stage đang tắt"
+
+msgid "Opening camera…"
+msgstr "Đang mở camera…"
+
+msgid "Center Stage is ready"
+msgstr "Center Stage đã sẵn sàng"
+
+msgid "The camera is being used by another application."
+msgstr "Camera đang được một ứng dụng khác sử dụng."
+
+msgid "The selected camera is not connected."
+msgstr "Camera đã chọn chưa được kết nối."
+
+msgid "The camera could not be opened."
+msgstr "Không thể mở camera."
+
+msgid "PipeWire cannot share the selected camera."
+msgstr "PipeWire không thể chia sẻ camera đã chọn."
+
+msgid "The camera was disconnected."
+msgstr "Camera đã bị ngắt kết nối."
+
+msgid "The Center Stage virtual camera is unavailable."
+msgstr "Camera ảo Center Stage chưa sẵn sàng."
+
+msgid "Video is running, but PipeWire cannot see the virtual camera."
+msgstr "Video đang chạy nhưng PipeWire chưa nhận camera ảo."
+
+msgid "The Center Stage PipeWire camera is unavailable."
+msgstr "Camera PipeWire Center Stage chưa sẵn sàng."
+
+msgid "The virtual camera output could not be started."
+msgstr "Không thể khởi động đầu ra camera ảo."
+
+msgid "The v4l2loopback driver is not installed."
+msgstr "Driver v4l2loopback chưa được cài đặt."
+
+msgid "Another device is using /dev/video10."
+msgstr "Một thiết bị khác đang sử dụng /dev/video10."
+
+msgid "The face detection model is missing."
+msgstr "Thiếu mô hình nhận diện khuôn mặt."
+
+msgid "Input and output cameras cannot be the same."
+msgstr "Camera đầu vào và đầu ra không được trùng nhau."
+
+msgid "Center Stage is already running."
+msgstr "Center Stage đang chạy."
+
+msgid "The camera resolution changed unexpectedly."
+msgstr "Độ phân giải camera đã thay đổi ngoài dự kiến."
+
+msgid "Center Stage stopped because of an internal error."
+msgstr "Center Stage đã dừng do lỗi nội bộ."
+
+msgid "The Center Stage background service is not installed."
+msgstr "Dịch vụ nền Center Stage chưa được cài đặt."
+
+msgid "Brightness"
+msgstr "Độ sáng"
+
+msgid "Contrast"
+msgstr "Độ tương phản"
+
+msgid "Saturation"
+msgstr "Độ bão hòa"
+
+msgid "Hue"
+msgstr "Sắc độ"
+
+msgid "Input camera"
+msgstr "Camera đầu vào"
+
+msgid "Settings"
+msgstr "Cài đặt"
+
+msgid "Choose a camera, then select Start to create your virtual camera."
+msgstr "Chọn camera rồi nhấn Bắt đầu để tạo camera ảo."
+
+msgid "Start"
+msgstr "Bắt đầu"
+
+msgid "Auto Zoom"
+msgstr "Tự động thu phóng"
+
+msgid "Mirror Output"
+msgstr "Lật hình đầu ra"
+
+msgid "Language"
+msgstr "Ngôn ngữ"
+
+msgid "Image Settings"
+msgstr "Điều chỉnh hình ảnh"
+
+msgid "Reset Image Settings"
+msgstr "Đặt lại hình ảnh"
+
+msgid "Integrated camera"
+msgstr "Camera tích hợp"
+
+msgid "External USB camera"
+msgstr "Webcam USB rời"
+
+msgid "Not supported by this camera"
+msgstr "Camera này không hỗ trợ"
+
+msgid "Checking camera controls…"
+msgstr "Đang kiểm tra điều khiển camera…"
+
+msgid "Select a connected camera first."
+msgstr "Hãy chọn một camera đang kết nối trước."
+
+msgid "Restarting…"
+msgstr "Đang khởi động lại…"
+
+msgid "Starting…"
+msgstr "Đang khởi động…"
+
+msgid "Stop"
+msgstr "Dừng"

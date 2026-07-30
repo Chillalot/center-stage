@@ -1,0 +1,44 @@
+#!/bin/sh
+set -e
+
+case "${1:-configure}" in
+    configure|abort-upgrade|abort-remove|abort-deconfigure) ;;
+    *) exit 0 ;;
+esac
+
+if ! modinfo v4l2loopback >/dev/null 2>&1; then
+    echo "Center Stage: v4l2loopback is not installed. Install v4l2loopback-dkms, then configure this package again." >&2
+    exit 1
+fi
+
+if ! grep -q '^v4l2loopback ' /proc/modules 2>/dev/null; then
+    if ! modprobe v4l2loopback video_nr=10 card_label="Center Stage" exclusive_caps=1 max_buffers=8; then
+        echo "Center Stage: v4l2loopback could not be loaded. Check Secure Boot or DKMS status." >&2
+        exit 1
+    fi
+elif [ ! -e /dev/video10 ]; then
+    echo "Center Stage: v4l2loopback is already loaded with different options; reboot before use." >&2
+fi
+
+if grep -q '^v4l2loopback ' /proc/modules 2>/dev/null; then
+    loaded_buffers=$(cat /sys/module/v4l2loopback/parameters/max_buffers 2>/dev/null || true)
+    loaded_exclusive=$(cat /sys/module/v4l2loopback/parameters/exclusive_caps 2>/dev/null || true)
+    case "$loaded_exclusive" in
+        Y,*|Y) exclusive_ok=yes ;;
+        *) exclusive_ok=no ;;
+    esac
+    if [ "$loaded_buffers" != "8" ] || [ "$exclusive_ok" != "yes" ]; then
+        echo "Center Stage: v4l2loopback is already active with old options; reboot once to apply exclusive_caps=1 and max_buffers=8." >&2
+    fi
+fi
+
+if [ -e /dev/video10 ]; then
+    device_info=$(v4l2-ctl -d /dev/video10 -D 2>/dev/null || true)
+    if ! printf '%s\n' "$device_info" | grep -q 'Driver name.*: v4l2 loopback' || \
+       ! printf '%s\n' "$device_info" | grep -q 'Card type.*: Center Stage'; then
+        echo "Center Stage: /dev/video10 belongs to another device; installation cannot continue safely." >&2
+        exit 1
+    fi
+fi
+
+exit 0

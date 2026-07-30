@@ -1,0 +1,4 @@
+#!/bin/sh
+systemctl --user daemon-reload >/dev/null 2>&1 || true
+export PYTHONPATH="/opt/center-stage/app:/opt/center-stage/vendor"
+exec /usr/bin/python3 -m center_stage.gui "$@"

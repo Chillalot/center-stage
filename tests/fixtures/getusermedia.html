@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Center Stage getUserMedia compatibility test</title>
+  <style>
+    body { background: #202124; color: #f1f3f4; font: 16px sans-serif; margin: 2rem; }
+    video { width: 640px; max-width: 100%; background: black; }
+    pre { white-space: pre-wrap; }
+  </style>
+</head>
+<body data-test-state="running">
+  <h1>Center Stage camera test</h1>
+  <video id="preview" autoplay muted playsinline></video>
+  <canvas id="sample" width="32" height="18" hidden></canvas>
+  <pre id="result">Testing…</pre>
+  <script>
+    const video = document.getElementById("preview");
+    const canvas = document.getElementById("sample");
+    const context = canvas.getContext("2d", { willReadFrequently: true });
+    const resultNode = document.getElementById("result");
+
+    function finish(state, result) {
+      document.body.dataset.testState = state;
+      resultNode.textContent = JSON.stringify(result);
+      document.title = `Center Stage test: ${state}`;
+    }
+
+    function sampleHash() {
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
+      let luminance = 0;
+      let hash = 2166136261;
+      for (let index = 0; index < pixels.length; index += 4) {
+        luminance += (pixels[index] + pixels[index + 1] + pixels[index + 2]) / 3;
+        hash ^= pixels[index] + pixels[index + 1] * 3 + pixels[index + 2] * 7;
+        hash = Math.imul(hash, 16777619);
+      }
+      return { hash: hash >>> 0, luminance: luminance / (pixels.length / 4) };
+    }
+
+    async function run() {
+      let permissionStream;
+      let stream;
+      try {
+        let devices = await navigator.mediaDevices.enumerateDevices();
+        let cameras = devices.filter(device => device.kind === "videoinput");
+        let centerStage = cameras.find(device => device.label.trim() === "Center Stage")
+          || cameras.find(device => device.label.includes("Center Stage"));
+        if (!centerStage) {
+          permissionStream = await navigator.mediaDevices.getUserMedia({ video: true });
+          permissionStream.getTracks().forEach(track => track.stop());
+          devices = await navigator.mediaDevices.enumerateDevices();
+          cameras = devices.filter(device => device.kind === "videoinput");
+          centerStage = cameras.find(device => device.label.trim() === "Center Stage")
+            || cameras.find(device => device.label.includes("Center Stage"));
+        }
+        if (!centerStage) {
+          throw new Error(`Center Stage was not enumerated: ${cameras.map(item => item.label).join(", ")}`);
+        }
+
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            deviceId: { exact: centerStage.deviceId },
+            width: { exact: 1920 },
+            height: { exact: 1080 },
+            frameRate: { ideal: 30, min: 24 },
+          },
+        });
+        video.srcObject = stream;
+        await video.play();
+        const track = stream.getVideoTracks()[0];
+        const settings = track.getSettings();
+        const hashes = new Set();
+        const mediaTimes = new Set();
+        let luminanceTotal = 0;
+        let frames = 0;
+        let firstNow = 0;
+        let lastNow = 0;
+        let firstMediaTime = 0;
+        let lastMediaTime = 0;
+        let firstPresentedFrames = 0;
+        let lastPresentedFrames = 0;
+        let maxGapMs = 0;
+
+        await new Promise((resolve, reject) => {
+          const timeout = setTimeout(() => reject(new Error(`Timed out after ${frames} frames`)), 12000);
+          const onFrame = (now, metadata) => {
+            if (!firstNow) firstNow = now;
+            if (!firstMediaTime) firstMediaTime = metadata.mediaTime;
+            if (!firstPresentedFrames) firstPresentedFrames = metadata.presentedFrames;
+            if (lastNow) maxGapMs = Math.max(maxGapMs, now - lastNow);
+            lastNow = now;
+            lastMediaTime = metadata.mediaTime;
+            lastPresentedFrames = metadata.presentedFrames;
+            const sample = sampleHash();
+            hashes.add(sample.hash);
+            luminanceTotal += sample.luminance;
+            mediaTimes.add(metadata.mediaTime);
+            frames += 1;
+            if (frames >= 90) {
+              clearTimeout(timeout);
+              resolve();
+            } else {
+              video.requestVideoFrameCallback(onFrame);
+            }
+          };
+          video.requestVideoFrameCallback(onFrame);
+        });
+
+        const durationSeconds = (lastNow - firstNow) / 1000;
+        const measuredFps = durationSeconds > 0 ? (frames - 1) / durationSeconds : 0;
+        const mediaDuration = lastMediaTime - firstMediaTime;
+        const sourceFps = mediaDuration > 0
+          ? (lastPresentedFrames - firstPresentedFrames) / mediaDuration
+          : 0;
+        const averageLuminance = luminanceTotal / frames;
+        const passed = settings.width === 1920
+          && settings.height === 1080
+          && frames >= 90
+          && sourceFps >= 24
+          && sourceFps <= 36
+          && averageLuminance > 5
+          && mediaTimes.size >= 85
+          && maxGapMs < 500;
+        const result = {
+          passed,
+          deviceLabel: track.label,
+          enumeratedLabels: cameras.map(item => item.label),
+          width: settings.width,
+          height: settings.height,
+          requestedFps: settings.frameRate,
+          measuredFps: Number(measuredFps.toFixed(2)),
+          sourceFps: Number(sourceFps.toFixed(2)),
+          frames,
+          uniqueMediaTimes: mediaTimes.size,
+          uniqueSampleHashes: hashes.size,
+          averageLuminance: Number(averageLuminance.toFixed(2)),
+          maxGapMs: Number(maxGapMs.toFixed(2)),
+        };
+        finish(passed ? "passed" : "failed", result);
+      } catch (error) {
+        finish("failed", { passed: false, error: String(error) });
+      } finally {
+        if (permissionStream) permissionStream.getTracks().forEach(track => track.stop());
+        if (stream) stream.getTracks().forEach(track => track.stop());
+      }
+    }
+
+    run();
+  </script>
+</body>
+</html>

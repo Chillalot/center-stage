@@ -1,0 +1,19 @@
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+
+build/
+dist/
+*.deb
+
+.coverage
+.pytest_cache/
+.mypy_cache/
+
+cap_%d
+
+# Historical local prototypes; V4 lives in the center_stage package.
+main_v3.py
+main_v3.2.py
+main_v3.3.py
