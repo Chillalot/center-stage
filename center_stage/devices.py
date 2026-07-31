@@ -111,6 +111,14 @@ def find_camera(camera_id: str | None) -> CameraDevice | None:
     return next((camera for camera in discover_cameras() if camera.camera_id == camera_id), None)
 
 
+def preferred_camera(cameras: Iterable[CameraDevice]) -> CameraDevice | None:
+    """Prefer an external USB input, then fall back to the first integrated camera."""
+    available = list(cameras)
+    return next((camera for camera in available if camera.kind == "usb"), None) or (
+        available[0] if available else None
+    )
+
+
 def query_controls(
     device: str,
     runner: Callable[[list[str]], subprocess.CompletedProcess[str]] = _run,

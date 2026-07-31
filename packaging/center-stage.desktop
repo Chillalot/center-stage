@@ -10,3 +10,4 @@ Icon=center-stage
 Terminal=false
 Categories=AudioVideo;Video;
 StartupNotify=true
+X-GNOME-UsesNotifications=true

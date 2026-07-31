@@ -2,7 +2,7 @@
 set -euo pipefail
 
 PROJECT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
-PACKAGE_VERSION=4.0.5
+PACKAGE_VERSION=4.1.0
 PACKAGE_ARCH=amd64
 PACKAGE_NAME=center-stage
 OUTPUT_DIR="$PROJECT_DIR/dist"
@@ -102,6 +102,9 @@ install -m 0755 "$PROJECT_DIR/packaging/center-stage-launcher" "$PACKAGE_ROOT/us
 install -m 0644 "$PROJECT_DIR/packaging/center-stage-engine.service" "$PACKAGE_ROOT/usr/lib/systemd/user/"
 install -m 0644 "$PROJECT_DIR/packaging/center-stage.desktop" "$PACKAGE_ROOT/usr/share/applications/"
 install -m 0644 "$PROJECT_DIR/packaging/center-stage.svg" "$PACKAGE_ROOT/usr/share/icons/hicolor/scalable/apps/"
+install -m 0644 "$PROJECT_DIR/packaging/center-stage-idle.svg" "$PACKAGE_ROOT/usr/share/icons/hicolor/scalable/apps/"
+install -m 0644 "$PROJECT_DIR/packaging/center-stage-active.svg" "$PACKAGE_ROOT/usr/share/icons/hicolor/scalable/apps/"
+install -m 0644 "$PROJECT_DIR/packaging/center-stage-warning.svg" "$PACKAGE_ROOT/usr/share/icons/hicolor/scalable/apps/"
 install -m 0644 "$PROJECT_DIR/packaging/modules-load.conf" "$PACKAGE_ROOT/etc/modules-load.d/center-stage.conf"
 install -m 0644 "$PROJECT_DIR/packaging/modprobe.conf" "$PACKAGE_ROOT/etc/modprobe.d/center-stage.conf"
 install -m 0755 "$PROJECT_DIR/packaging/postinst" "$PACKAGE_ROOT/DEBIAN/postinst"
@@ -117,7 +120,7 @@ Section: video
 Priority: optional
 Architecture: $PACKAGE_ARCH
 Maintainer: Center Stage Local <local@center-stage.invalid>
-Depends: python3 (>= 3.12), python3-pil, python3-gi, gir1.2-gtk-3.0, gir1.2-gstreamer-1.0, gir1.2-gst-plugins-base-1.0, gstreamer1.0-gtk3, gstreamer1.0-pipewire, gstreamer1.0-plugins-base, gstreamer1.0-plugins-good, gstreamer1.0-plugins-bad, v4l-utils, pipewire, wireplumber
+Depends: python3 (>= 3.12), python3-pil, python3-gi, gir1.2-gtk-3.0, gir1.2-ayatanaappindicator3-0.1, gir1.2-gstreamer-1.0, gir1.2-gst-plugins-base-1.0, gstreamer1.0-gtk3, gstreamer1.0-pipewire, gstreamer1.0-plugins-base, gstreamer1.0-plugins-good, gstreamer1.0-plugins-bad, v4l-utils, pipewire, wireplumber
 Suggests: v4l2loopback-dkms, v4l2loopback-utils
 Installed-Size: $INSTALLED_SIZE
 Description: Bilingual auto-framing virtual camera

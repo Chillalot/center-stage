@@ -649,6 +649,7 @@ def _status_fields(
     tracking: str,
     zoom: float,
     *,
+    center_stage_enabled: bool,
     pipewire_visible: bool,
     output_format: str = OUTPUT_FORMAT,
 ) -> dict[str, Any]:
@@ -674,6 +675,7 @@ def _status_fields(
         "format": output_format,
         "tracking": tracking,
         "zoom": round(zoom, 2),
+        "center_stage_enabled": center_stage_enabled,
     }
 
 
@@ -698,6 +700,8 @@ def run_pipeline(
 
     controls = camera_control_values(config, camera.camera_id)
     apply_saved_controls(camera, controls)
+    center_stage_enabled = bool(config.get("center_stage_enabled", True))
+    mirror_output = bool(config.get("mirror_output", False))
     if publish_status:
         write_status(
             "starting",
@@ -709,7 +713,8 @@ def run_pipeline(
             output_width=OUTPUT_WIDTH,
             output_height=OUTPUT_HEIGHT,
             output_fps=OUTPUT_FPS,
-            tracking="SEARCHING",
+            tracking="SEARCHING" if center_stage_enabled else "OFF",
+            center_stage_enabled=center_stage_enabled,
         )
 
     capture = PipeWireCameraCapture(camera)
@@ -718,14 +723,18 @@ def run_pipeline(
     try:
         frame, mode = capture.start()
         detector = create_face_detector(model_path())
-        framer = AutoFramer(mode.width, mode.height, auto_zoom=bool(config.get("auto_zoom", True)))
+        framer = AutoFramer(
+            mode.width,
+            mode.height,
+            center_stage_enabled=center_stage_enabled,
+        )
         fps_counter = FpsCounter()
         frame_index = 0
         now = time.monotonic()
-        faces = detect_faces(frame, detector)
-        snapshot = framer.update(faces, True, now)
+        faces = detect_faces(frame, detector) if center_stage_enabled else ()
+        snapshot = framer.update(faces, center_stage_enabled, now)
         clean_output = crop_and_resize(frame, snapshot.crop, OUTPUT_WIDTH, OUTPUT_HEIGHT)
-        latest_output = cv2.flip(clean_output, 1) if bool(config.get("mirror_output", False)) else clean_output
+        latest_output = cv2.flip(clean_output, 1) if mirror_output else clean_output
         output.start(latest_output)
         measured_fps = fps_counter.tick(now)
         if publish_status:
@@ -738,6 +747,7 @@ def run_pipeline(
                     measured_fps,
                     snapshot.status,
                     snapshot.zoom,
+                    center_stage_enabled=center_stage_enabled,
                     pipewire_visible=output.refresh_pipewire_visibility(),
                     output_format=output.output_format,
                 ),
@@ -745,6 +755,7 @@ def run_pipeline(
 
         last_camera_frame = now
         last_status_update = 0.0
+        last_config_check = now
         next_output_at = time.monotonic() + 1.0 / OUTPUT_FPS
         while not stopper.is_set():
             new_frame = capture.read(0)
@@ -752,13 +763,29 @@ def run_pipeline(
             if new_frame is not None:
                 frame = new_frame
                 last_camera_frame = now
-                detection_ran = frame_index % DETECTION_INTERVAL == 0
+                if publish_status and now - last_config_check >= 0.5:
+                    live_config = load_config()
+                    requested_center_stage = bool(
+                        live_config.get("center_stage_enabled", True)
+                    )
+                    if requested_center_stage != center_stage_enabled:
+                        center_stage_enabled = requested_center_stage
+                        framer = AutoFramer(
+                            mode.width,
+                            mode.height,
+                            center_stage_enabled=center_stage_enabled,
+                        )
+                    mirror_output = bool(live_config.get("mirror_output", False))
+                    last_config_check = now
+                detection_ran = (
+                    center_stage_enabled and frame_index % DETECTION_INTERVAL == 0
+                )
                 faces = detect_faces(frame, detector) if detection_ran else ()
                 snapshot = framer.update(faces, detection_ran, now)
                 clean_output = crop_and_resize(frame, snapshot.crop, OUTPUT_WIDTH, OUTPUT_HEIGHT)
                 latest_output = (
                     cv2.flip(clean_output, 1)
-                    if bool(config.get("mirror_output", False))
+                    if mirror_output
                     else clean_output
                 )
                 frame_index += 1
@@ -777,6 +804,7 @@ def run_pipeline(
                         measured_fps,
                         snapshot.status,
                         snapshot.zoom,
+                        center_stage_enabled=center_stage_enabled,
                         pipewire_visible=output.refresh_pipewire_visibility(),
                         output_format=output.output_format,
                     ),

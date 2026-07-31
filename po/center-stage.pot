@@ -1,128 +1,283 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the Center Stage package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: Center Stage 4.0.5\n"
+"Project-Id-Version: Center Stage 4.1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-31 15:14+0700\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-msgid "Center Stage is off"
+#: center_stage/gui.py:47 center_stage/gui.py:209 center_stage/gui.py:450
+msgid "Camera is disconnected"
 msgstr ""
 
-msgid "Opening camera…"
+#: center_stage/gui.py:48
+msgid "Connecting camera…"
 msgstr ""
 
-msgid "Center Stage is ready"
+#: center_stage/gui.py:49
+msgid "Camera is ready"
 msgstr ""
 
+#: center_stage/gui.py:50
 msgid "The camera is being used by another application."
 msgstr ""
 
+#: center_stage/gui.py:51
 msgid "The selected camera is not connected."
 msgstr ""
 
+#: center_stage/gui.py:52
 msgid "The camera could not be opened."
 msgstr ""
 
+#: center_stage/gui.py:53
 msgid "PipeWire cannot share the selected camera."
 msgstr ""
 
+#: center_stage/gui.py:54
 msgid "The camera was disconnected."
 msgstr ""
 
+#: center_stage/gui.py:55
 msgid "The Center Stage virtual camera is unavailable."
 msgstr ""
 
+#: center_stage/gui.py:56
 msgid "Video is running, but PipeWire cannot see the virtual camera."
 msgstr ""
 
+#: center_stage/gui.py:57
 msgid "The Center Stage PipeWire camera is unavailable."
 msgstr ""
 
+#: center_stage/gui.py:58
 msgid "The virtual camera output could not be started."
 msgstr ""
 
+#: center_stage/gui.py:59
 msgid "The v4l2loopback driver is not installed."
 msgstr ""
 
+#: center_stage/gui.py:60
 msgid "Another device is using /dev/video10."
 msgstr ""
 
+#: center_stage/gui.py:61
 msgid "The face detection model is missing."
 msgstr ""
 
+#: center_stage/gui.py:62
 msgid "Input and output cameras cannot be the same."
 msgstr ""
 
+#: center_stage/gui.py:63
 msgid "Center Stage is already running."
 msgstr ""
 
+#: center_stage/gui.py:64
 msgid "The camera resolution changed unexpectedly."
 msgstr ""
 
+#: center_stage/gui.py:65
 msgid "Center Stage stopped because of an internal error."
 msgstr ""
 
+#: center_stage/gui.py:66
 msgid "The Center Stage background service is not installed."
 msgstr ""
 
+#: center_stage/gui.py:70
 msgid "Brightness"
 msgstr ""
 
+#: center_stage/gui.py:71
 msgid "Contrast"
 msgstr ""
 
+#: center_stage/gui.py:72
 msgid "Saturation"
 msgstr ""
 
+#: center_stage/gui.py:73
 msgid "Hue"
 msgstr ""
 
-msgid "Input camera"
+#: center_stage/gui.py:77
+msgid "Portrait"
 msgstr ""
 
-msgid "Settings"
+#: center_stage/gui.py:78
+msgid "Studio Light"
 msgstr ""
 
-msgid "Choose a camera, then select Start to create your virtual camera."
+#: center_stage/gui.py:79
+msgid "Reactions"
 msgstr ""
 
-msgid "Start"
+#: center_stage/gui.py:80
+msgid "Background"
 msgstr ""
 
-msgid "Auto Zoom"
+#: center_stage/gui.py:175 center_stage/gui.py:469
+msgid "Camera"
 msgstr ""
 
+#: center_stage/gui.py:176
+msgid "Studio"
+msgstr ""
+
+#: center_stage/gui.py:177
+msgid "Calls"
+msgstr ""
+
+#: center_stage/gui.py:195
+msgid "Image Adjustments"
+msgstr ""
+
+#: center_stage/gui.py:204 center_stage/gui.py:571 center_stage/gui.py:590
+msgid "No camera connected"
+msgstr ""
+
+#: center_stage/gui.py:232
+msgid "Connect a camera to make Center Stage available to Meet and Vesktop."
+msgstr ""
+
+#: center_stage/gui.py:251
+msgid "Manual Framing"
+msgstr ""
+
+#: center_stage/gui.py:252
+msgid "Preview"
+msgstr ""
+
+#: center_stage/gui.py:260
+msgid "Recenter"
+msgstr ""
+
+#: center_stage/gui.py:269 center_stage/gui.py:455
+msgid "Center Stage"
+msgstr ""
+
+#: center_stage/gui.py:296
+msgid "Interface preview only — this effect does not change the video yet."
+msgstr ""
+
+#: center_stage/gui.py:334
 msgid "Mirror Output"
 msgstr ""
 
+#: center_stage/gui.py:338
 msgid "Language"
 msgstr ""
 
-msgid "Image Settings"
-msgstr ""
-
+#: center_stage/gui.py:345
 msgid "Reset Image Settings"
 msgstr ""
 
+#: center_stage/gui.py:360
+msgid "Photo"
+msgstr ""
+
+#: center_stage/gui.py:360
+msgid "4-up"
+msgstr ""
+
+#: center_stage/gui.py:360
+msgid "Video"
+msgstr ""
+
+#: center_stage/gui.py:377
+msgid "Studio is coming soon"
+msgstr ""
+
+#: center_stage/gui.py:381
+msgid "Photo, 4-up, video, and the filmstrip will use the same camera stage."
+msgstr ""
+
+#: center_stage/gui.py:386
+msgid "Capture"
+msgstr ""
+
+#: center_stage/gui.py:394
+msgid "Filmstrip"
+msgstr ""
+
+#: center_stage/gui.py:406
+msgid "Recent Calls"
+msgstr ""
+
+#: center_stage/gui.py:411
+msgid "No recent calls"
+msgstr ""
+
+#: center_stage/gui.py:425
+msgid "Calls are coming soon"
+msgstr ""
+
+#: center_stage/gui.py:429
+msgid "Start one-to-one and group calls from this workspace."
+msgstr ""
+
+#: center_stage/gui.py:434
+msgid "New Call"
+msgstr ""
+
+#: center_stage/gui.py:474
+msgid "Image Adjustments…"
+msgstr ""
+
+#: center_stage/gui.py:477
+msgid "Show Center Stage"
+msgstr ""
+
+#: center_stage/gui.py:482 center_stage/gui.py:865
+msgid "Disconnect Camera"
+msgstr ""
+
+#: center_stage/gui.py:485
+msgid "Quit Center Stage"
+msgstr ""
+
+#: center_stage/gui.py:493
 msgid "Integrated camera"
 msgstr ""
 
+#: center_stage/gui.py:493
 msgid "External USB camera"
 msgstr ""
 
-msgid "Not supported by this camera"
+#: center_stage/gui.py:542
+msgid "Camera changed"
 msgstr ""
 
+#: center_stage/gui.py:543
+#, python-brace-format
+msgid "Switched to {camera} because the previous camera disconnected."
+msgstr ""
+
+#: center_stage/gui.py:582
+msgid "Refresh Cameras"
+msgstr ""
+
+#: center_stage/gui.py:614
 msgid "Checking camera controls…"
 msgstr ""
 
-msgid "Select a connected camera first."
+#: center_stage/gui.py:646
+msgid "Not supported by this camera"
 msgstr ""
 
-msgid "Restarting…"
-msgstr ""
-
-msgid "Starting…"
-msgstr ""
-
-msgid "Stop"
+#: center_stage/gui.py:865
+msgid "Connect Camera"
 msgstr ""

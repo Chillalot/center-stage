@@ -3,10 +3,23 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from center_stage.devices import CameraControl, discover_cameras, query_controls
+from center_stage.devices import (
+    CameraControl,
+    CameraDevice,
+    discover_cameras,
+    preferred_camera,
+    query_controls,
+)
 
 
 class DeviceTests(unittest.TestCase):
+    def test_prefers_external_camera_then_integrated_fallback(self):
+        integrated = CameraDevice("built-in", "/dev/video0", "/dev/video0", "Built-in", "a", "integrated")
+        usb = CameraDevice("usb", "/dev/video2", "/dev/video2", "USB", "b", "usb")
+        self.assertIs(preferred_camera([integrated, usb]), usb)
+        self.assertIs(preferred_camera([integrated]), integrated)
+        self.assertIsNone(preferred_camera([]))
+
     def test_normalized_mapping_uses_hardware_default_as_zero(self):
         control = CameraControl("saturation", 0, 255, 1, 64, 64)
         self.assertEqual(control.from_normalized(-100), 0)

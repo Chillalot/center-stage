@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-package=${1:-dist/center-stage_4.0.5_amd64.deb}
+package=${1:-dist/center-stage_4.1.0_amd64.deb}
 old_package=${2:-}
 
 if [ ! -f "$package" ]; then
@@ -15,7 +15,7 @@ if [ -n "$old_package" ]; then
 fi
 sudo apt-get install -y "$package"
 
-test "$(dpkg-query -W -f='${Version}' center-stage)" = "4.0.5"
+test "$(dpkg-query -W -f='${Version}' center-stage)" = "4.1.0"
 systemctl --user daemon-reload
 systemctl --user start center-stage-engine.service
 sleep 5

@@ -1,6 +1,8 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: Center Stage 4.0.5\n"
+"Project-Id-Version: Center Stage 4.1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-31 15:14+0700\n"
 "PO-Revision-Date: 2026-07-30 00:00+0700\n"
 "Last-Translator: Center Stage Local\n"
 "Language-Team: Vietnamese\n"
@@ -10,125 +12,306 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-msgid "Center Stage is off"
-msgstr "Center Stage đang tắt"
+#: center_stage/gui.py:47 center_stage/gui.py:209 center_stage/gui.py:450
+msgid "Camera is disconnected"
+msgstr "Camera đã ngắt kết nối"
 
-msgid "Opening camera…"
-msgstr "Đang mở camera…"
+#: center_stage/gui.py:48
+msgid "Connecting camera…"
+msgstr "Đang kết nối camera…"
 
-msgid "Center Stage is ready"
-msgstr "Center Stage đã sẵn sàng"
+#: center_stage/gui.py:49
+msgid "Camera is ready"
+msgstr "Camera đã sẵn sàng"
 
+#: center_stage/gui.py:50
 msgid "The camera is being used by another application."
 msgstr "Camera đang được một ứng dụng khác sử dụng."
 
+#: center_stage/gui.py:51
 msgid "The selected camera is not connected."
 msgstr "Camera đã chọn chưa được kết nối."
 
+#: center_stage/gui.py:52
 msgid "The camera could not be opened."
 msgstr "Không thể mở camera."
 
+#: center_stage/gui.py:53
 msgid "PipeWire cannot share the selected camera."
 msgstr "PipeWire không thể chia sẻ camera đã chọn."
 
+#: center_stage/gui.py:54
 msgid "The camera was disconnected."
 msgstr "Camera đã bị ngắt kết nối."
 
+#: center_stage/gui.py:55
 msgid "The Center Stage virtual camera is unavailable."
 msgstr "Camera ảo Center Stage chưa sẵn sàng."
 
+#: center_stage/gui.py:56
 msgid "Video is running, but PipeWire cannot see the virtual camera."
 msgstr "Video đang chạy nhưng PipeWire chưa nhận camera ảo."
 
+#: center_stage/gui.py:57
 msgid "The Center Stage PipeWire camera is unavailable."
 msgstr "Camera PipeWire Center Stage chưa sẵn sàng."
 
+#: center_stage/gui.py:58
 msgid "The virtual camera output could not be started."
 msgstr "Không thể khởi động đầu ra camera ảo."
 
+#: center_stage/gui.py:59
 msgid "The v4l2loopback driver is not installed."
 msgstr "Driver v4l2loopback chưa được cài đặt."
 
+#: center_stage/gui.py:60
 msgid "Another device is using /dev/video10."
 msgstr "Một thiết bị khác đang sử dụng /dev/video10."
 
+#: center_stage/gui.py:61
 msgid "The face detection model is missing."
 msgstr "Thiếu mô hình nhận diện khuôn mặt."
 
+#: center_stage/gui.py:62
 msgid "Input and output cameras cannot be the same."
 msgstr "Camera đầu vào và đầu ra không được trùng nhau."
 
+#: center_stage/gui.py:63
 msgid "Center Stage is already running."
 msgstr "Center Stage đang chạy."
 
+#: center_stage/gui.py:64
 msgid "The camera resolution changed unexpectedly."
 msgstr "Độ phân giải camera đã thay đổi ngoài dự kiến."
 
+#: center_stage/gui.py:65
 msgid "Center Stage stopped because of an internal error."
 msgstr "Center Stage đã dừng do lỗi nội bộ."
 
+#: center_stage/gui.py:66
 msgid "The Center Stage background service is not installed."
 msgstr "Dịch vụ nền Center Stage chưa được cài đặt."
 
+#: center_stage/gui.py:70
 msgid "Brightness"
 msgstr "Độ sáng"
 
+#: center_stage/gui.py:71
 msgid "Contrast"
 msgstr "Độ tương phản"
 
+#: center_stage/gui.py:72
 msgid "Saturation"
 msgstr "Độ bão hòa"
 
+#: center_stage/gui.py:73
 msgid "Hue"
 msgstr "Sắc độ"
 
-msgid "Input camera"
-msgstr "Camera đầu vào"
+#: center_stage/gui.py:77
+msgid "Portrait"
+msgstr "Chân dung"
 
-msgid "Settings"
-msgstr "Cài đặt"
+#: center_stage/gui.py:78
+msgid "Studio Light"
+msgstr "Ánh sáng Studio"
 
-msgid "Choose a camera, then select Start to create your virtual camera."
-msgstr "Chọn camera rồi nhấn Bắt đầu để tạo camera ảo."
+#: center_stage/gui.py:79
+msgid "Reactions"
+msgstr "Phản ứng"
 
-msgid "Start"
-msgstr "Bắt đầu"
+#: center_stage/gui.py:80
+msgid "Background"
+msgstr "Phông nền"
 
-msgid "Auto Zoom"
-msgstr "Tự động thu phóng"
+#: center_stage/gui.py:175 center_stage/gui.py:469
+msgid "Camera"
+msgstr "Camera"
 
+#: center_stage/gui.py:176
+msgid "Studio"
+msgstr "Studio"
+
+#: center_stage/gui.py:177
+msgid "Calls"
+msgstr "Cuộc gọi"
+
+#: center_stage/gui.py:195
+msgid "Image Adjustments"
+msgstr "Điều chỉnh hình ảnh"
+
+#: center_stage/gui.py:204 center_stage/gui.py:571 center_stage/gui.py:590
+msgid "No camera connected"
+msgstr "Chưa kết nối camera"
+
+#: center_stage/gui.py:232
+msgid "Connect a camera to make Center Stage available to Meet and Vesktop."
+msgstr "Kết nối camera để dùng Center Stage trong Meet và Vesktop."
+
+#: center_stage/gui.py:251
+msgid "Manual Framing"
+msgstr "Căn khung thủ công"
+
+#: center_stage/gui.py:252
+msgid "Preview"
+msgstr "Xem trước"
+
+#: center_stage/gui.py:260
+msgid "Recenter"
+msgstr "Căn giữa lại"
+
+#: center_stage/gui.py:269 center_stage/gui.py:455
+msgid "Center Stage"
+msgstr "Center Stage"
+
+#: center_stage/gui.py:296
+msgid "Interface preview only — this effect does not change the video yet."
+msgstr "Chỉ xem trước giao diện — hiệu ứng này chưa thay đổi video."
+
+#: center_stage/gui.py:334
 msgid "Mirror Output"
 msgstr "Lật hình đầu ra"
 
+#: center_stage/gui.py:338
 msgid "Language"
 msgstr "Ngôn ngữ"
 
-msgid "Image Settings"
-msgstr "Điều chỉnh hình ảnh"
-
+#: center_stage/gui.py:345
 msgid "Reset Image Settings"
 msgstr "Đặt lại hình ảnh"
 
+#: center_stage/gui.py:360
+msgid "Photo"
+msgstr "Ảnh"
+
+#: center_stage/gui.py:360
+msgid "4-up"
+msgstr "4 ảnh"
+
+#: center_stage/gui.py:360
+msgid "Video"
+msgstr "Video"
+
+#: center_stage/gui.py:377
+msgid "Studio is coming soon"
+msgstr "Studio sắp ra mắt"
+
+#: center_stage/gui.py:381
+msgid "Photo, 4-up, video, and the filmstrip will use the same camera stage."
+msgstr "Ảnh, 4 ảnh, video và dải ảnh sẽ dùng chung một khung camera."
+
+#: center_stage/gui.py:386
+msgid "Capture"
+msgstr "Chụp"
+
+#: center_stage/gui.py:394
+msgid "Filmstrip"
+msgstr "Dải ảnh"
+
+#: center_stage/gui.py:406
+msgid "Recent Calls"
+msgstr "Cuộc gọi gần đây"
+
+#: center_stage/gui.py:411
+msgid "No recent calls"
+msgstr "Không có cuộc gọi gần đây"
+
+#: center_stage/gui.py:425
+msgid "Calls are coming soon"
+msgstr "Cuộc gọi sắp ra mắt"
+
+#: center_stage/gui.py:429
+msgid "Start one-to-one and group calls from this workspace."
+msgstr "Bắt đầu cuộc gọi một-một và cuộc gọi nhóm từ không gian này."
+
+#: center_stage/gui.py:434
+msgid "New Call"
+msgstr "Cuộc gọi mới"
+
+#: center_stage/gui.py:474
+msgid "Image Adjustments…"
+msgstr "Điều chỉnh hình ảnh…"
+
+#: center_stage/gui.py:477
+msgid "Show Center Stage"
+msgstr "Hiện Center Stage"
+
+#: center_stage/gui.py:482 center_stage/gui.py:865
+msgid "Disconnect Camera"
+msgstr "Ngắt kết nối camera"
+
+#: center_stage/gui.py:485
+msgid "Quit Center Stage"
+msgstr "Thoát Center Stage"
+
+#: center_stage/gui.py:493
 msgid "Integrated camera"
 msgstr "Camera tích hợp"
 
+#: center_stage/gui.py:493
 msgid "External USB camera"
 msgstr "Webcam USB rời"
 
-msgid "Not supported by this camera"
-msgstr "Camera này không hỗ trợ"
+#: center_stage/gui.py:542
+msgid "Camera changed"
+msgstr "Đã đổi camera"
 
+#: center_stage/gui.py:543
+#, python-brace-format
+msgid "Switched to {camera} because the previous camera disconnected."
+msgstr "Đã chuyển sang {camera} vì camera trước đó bị ngắt kết nối."
+
+#: center_stage/gui.py:582
+msgid "Refresh Cameras"
+msgstr "Làm mới camera"
+
+#: center_stage/gui.py:614
 msgid "Checking camera controls…"
 msgstr "Đang kiểm tra điều khiển camera…"
 
-msgid "Select a connected camera first."
-msgstr "Hãy chọn một camera đang kết nối trước."
+#: center_stage/gui.py:646
+msgid "Not supported by this camera"
+msgstr "Camera này không hỗ trợ"
 
-msgid "Restarting…"
-msgstr "Đang khởi động lại…"
+#: center_stage/gui.py:865
+msgid "Connect Camera"
+msgstr "Kết nối camera"
 
-msgid "Starting…"
-msgstr "Đang khởi động…"
+#~ msgid "Center Stage is off"
+#~ msgstr "Center Stage đang tắt"
 
-msgid "Stop"
-msgstr "Dừng"
+#~ msgid "Opening camera…"
+#~ msgstr "Đang mở camera…"
+
+#~ msgid "Center Stage is ready"
+#~ msgstr "Center Stage đã sẵn sàng"
+
+#~ msgid "Input camera"
+#~ msgstr "Camera đầu vào"
+
+#~ msgid "Settings"
+#~ msgstr "Cài đặt"
+
+#~ msgid "Choose a camera, then select Start to create your virtual camera."
+#~ msgstr "Chọn camera rồi nhấn Bắt đầu để tạo camera ảo."
+
+#~ msgid "Start"
+#~ msgstr "Bắt đầu"
+
+#~ msgid "Auto Zoom"
+#~ msgstr "Tự động thu phóng"
+
+#~ msgid "Image Settings"
+#~ msgstr "Điều chỉnh hình ảnh"
+
+#~ msgid "Select a connected camera first."
+#~ msgstr "Hãy chọn một camera đang kết nối trước."
+
+#~ msgid "Restarting…"
+#~ msgstr "Đang khởi động lại…"
+
+#~ msgid "Starting…"
+#~ msgstr "Đang khởi động…"
+
+#~ msgid "Stop"
+#~ msgstr "Dừng"

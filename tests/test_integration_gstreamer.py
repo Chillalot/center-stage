@@ -81,7 +81,7 @@ class GStreamerIntegrationTests(unittest.TestCase):
         ) as parameters:
             max_buffers = int(parameters.read().strip())
         if max_buffers < 8:
-            self.skipTest("reboot after installing V4.0.5 to apply v4l2loopback max_buffers=8")
+            self.skipTest("reboot after installing V4.1.0 to apply v4l2loopback max_buffers=8")
         before = {name: invocation_id(name) for name in ("pipewire.service", "wireplumber.service")}
         frame = np.full((OUTPUT_HEIGHT, OUTPUT_WIDTH, 3), 48, dtype=np.uint8)
         output = V4L2VirtualOutput("/dev/video10")

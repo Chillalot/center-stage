@@ -24,6 +24,14 @@ class ConfigTests(unittest.TestCase):
             config = load_config(path)
         self.assertEqual(config["language"], "en")
 
+    def test_migrates_auto_zoom_to_center_stage(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "config.json"
+            path.write_text(json.dumps({"version": 1, "auto_zoom": False}), encoding="utf-8")
+            config = load_config(path)
+        self.assertEqual(config["version"], 2)
+        self.assertFalse(config["center_stage_enabled"])
+
     def test_controls_are_saved_per_camera_and_clamped(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "config.json"

@@ -1,4 +1,4 @@
-# Center Stage V4.0.5
+# Center Stage V4.1.0
 
 Center Stage turns a physical webcam into a face-tracking virtual camera on
 Linux. The V4 desktop app provides a lightweight GTK3 interface in English and
@@ -7,13 +7,16 @@ service.
 
 ## Desktop behavior
 
-- Open **Center Stage** from the application menu.
-- Select an integrated or external USB camera.
-- Optionally adjust brightness, contrast, saturation, hue, Auto Zoom, or Mirror
-  Output.
-- Select **Start**. The virtual camera appears as **Center Stage** in video apps.
-- Closing the window leaves the camera engine running.
-- Reopen Center Stage and select **Stop** to release the physical camera.
+- Open **Center Stage** from the application menu. The preferred camera connects
+  automatically and the virtual camera appears as **Center Stage** in video apps.
+- Use the **Center Stage** toggle for live face-driven framing. Turning it off
+  returns to a static, uncropped camera frame.
+- Select cameras and quick effects from the Cinnamon status icon. Image controls
+  remain available in the compact adjustments panel.
+- Closing the window hides it to the status icon and leaves the camera engine
+  running. **Quit Center Stage** stops the camera before exiting.
+- Camera, Studio, and Calls share one workspace. Studio, Calls, and effect buttons
+  marked **Preview** are interface previews in this release.
 - The engine does not start automatically after login.
 
 English is used on first launch. Vietnamese can be selected under Settings.
@@ -38,13 +41,13 @@ chmod +x packaging/build_deb.sh
 The result is:
 
 ```text
-dist/center-stage_4.0.5_amd64.deb
+dist/center-stage_4.1.0_amd64.deb
 ```
 
 Install it with:
 
 ```bash
-sudo apt install ./dist/center-stage_4.0.5_amd64.deb
+sudo apt install ./dist/center-stage_4.1.0_amd64.deb
 ```
 
 The package expects a working `v4l2loopback` kernel module. It configures the
@@ -123,9 +126,9 @@ can use the physical camera and Center Stage concurrently. Legacy apps that open
 
 ### Center Stage does not appear in a video app
 
-Start Center Stage first, then reopen the video app's camera selector. The
+Open Center Stage first, then reopen the video app's camera selector. The
 standard V4L2 webcam appears while the engine is writing and stops being usable
-on Stop. PipeWire may also discover that V4L2 webcam, but Center Stage does not
+after **Disconnect Camera** or **Quit Center Stage**. PipeWire may also discover that V4L2 webcam, but Center Stage does not
 create a PipeWire node itself. It never restarts PipeWire, WirePlumber, or the
 audio service.
 

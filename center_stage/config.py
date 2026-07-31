@@ -13,10 +13,10 @@ from typing import Any
 CONTROL_NAMES = ("brightness", "contrast", "saturation", "hue")
 
 DEFAULT_CONFIG: dict[str, Any] = {
-    "version": 1,
+    "version": 2,
     "language": "en",
     "selected_camera_id": None,
-    "auto_zoom": True,
+    "center_stage_enabled": True,
     "mirror_output": False,
     "output_device": "/dev/video10",
     "width": 1920,
@@ -58,11 +58,14 @@ def load_config(path: Path | None = None) -> dict[str, Any]:
     for key in DEFAULT_CONFIG:
         if key in raw:
             result[key] = raw[key]
+    if "center_stage_enabled" not in raw and "auto_zoom" in raw:
+        result["center_stage_enabled"] = bool(raw["auto_zoom"])
+    result["version"] = DEFAULT_CONFIG["version"]
     if result["language"] not in {"en", "vi"}:
         result["language"] = "en"
     if not isinstance(result["camera_controls"], dict):
         result["camera_controls"] = {}
-    result["auto_zoom"] = bool(result["auto_zoom"])
+    result["center_stage_enabled"] = bool(result["center_stage_enabled"])
     result["mirror_output"] = bool(result["mirror_output"])
     return result
 
