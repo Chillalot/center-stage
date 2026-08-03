@@ -50,7 +50,7 @@ class TranslationTests(unittest.TestCase):
             )
             translate = translator("vi", [locale_root])
             self.assertEqual(translate("Camera"), "Camera")
-            self.assertEqual(translate("External USB camera"), "Webcam USB rời")
+            self.assertEqual(translate("Microphone"), "Micrô")
 
 
 if __name__ == "__main__":

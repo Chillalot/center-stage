@@ -29,8 +29,20 @@ class ConfigTests(unittest.TestCase):
             path = Path(directory) / "config.json"
             path.write_text(json.dumps({"version": 1, "auto_zoom": False}), encoding="utf-8")
             config = load_config(path)
-        self.assertEqual(config["version"], 2)
+        self.assertEqual(config["version"], 4)
         self.assertFalse(config["center_stage_enabled"])
+
+    def test_v4_media_microphone_and_effect_defaults(self):
+        with tempfile.TemporaryDirectory() as directory:
+            config = load_config(Path(directory) / "missing.json")
+        self.assertEqual(config["version"], 4)
+        self.assertIsNone(config["selected_microphone_id"])
+        self.assertFalse(config["microphone_muted"])
+        self.assertEqual(config["media_folder"], "")
+        self.assertFalse(config["portrait_enabled"])
+        self.assertEqual(config["portrait_strength"], 50)
+        self.assertFalse(config["studio_light_enabled"])
+        self.assertEqual(config["studio_light_strength"], 50)
 
     def test_controls_are_saved_per_camera_and_clamped(self):
         with tempfile.TemporaryDirectory() as directory:

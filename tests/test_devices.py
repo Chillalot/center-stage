@@ -6,13 +6,25 @@ from pathlib import Path
 from center_stage.devices import (
     CameraControl,
     CameraDevice,
+    discover_microphones,
     discover_cameras,
     preferred_camera,
+    preferred_microphone,
     query_controls,
 )
 
 
 class DeviceTests(unittest.TestCase):
+    def test_discovers_real_microphones_and_ignores_monitors(self):
+        output = (
+            "1\talsa_output.card.sink.monitor\tPipeWire\ts16le\n"
+            "2\talsa_input.usb-mic.mono-fallback\tPipeWire\ts16le\n"
+        )
+        runner = lambda arguments: subprocess.CompletedProcess(arguments, 0, stdout=output, stderr="")
+        microphones = discover_microphones(runner)
+        self.assertEqual([item.microphone_id for item in microphones], ["alsa_input.usb-mic.mono-fallback"])
+        self.assertIs(preferred_microphone(microphones, microphones[0].microphone_id), microphones[0])
+
     def test_prefers_external_camera_then_integrated_fallback(self):
         integrated = CameraDevice("built-in", "/dev/video0", "/dev/video0", "Built-in", "a", "integrated")
         usb = CameraDevice("usb", "/dev/video2", "/dev/video2", "USB", "b", "usb")

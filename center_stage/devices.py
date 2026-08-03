@@ -53,6 +53,46 @@ class CameraDevice:
     kind: str
 
 
+@dataclass(frozen=True)
+class MicrophoneDevice:
+    microphone_id: str
+    name: str
+
+
+def discover_microphones(
+    runner: Callable[[list[str]], subprocess.CompletedProcess[str]] | None = None,
+) -> list[MicrophoneDevice]:
+    """Discover real Pulse/PipeWire microphone sources, excluding output monitors."""
+    result = (runner or _run)(["pactl", "list", "short", "sources"])
+    if result.returncode != 0:
+        return []
+    devices: list[MicrophoneDevice] = []
+    for line in result.stdout.splitlines():
+        fields = line.split("\t")
+        if len(fields) < 2:
+            fields = line.split()
+        if len(fields) < 2:
+            continue
+        source = fields[1]
+        if source.endswith(".monitor"):
+            continue
+        label = source.replace("alsa_input.", "").replace(".mono-fallback", "")
+        label = label.replace("_", " ").replace("-", " ").strip()
+        devices.append(MicrophoneDevice(source, label or source))
+    return devices
+
+
+def preferred_microphone(
+    microphones: Iterable[MicrophoneDevice], selected_id: str | None = None
+) -> MicrophoneDevice | None:
+    available = list(microphones)
+    if selected_id:
+        selected = next((item for item in available if item.microphone_id == selected_id), None)
+        if selected is not None:
+            return selected
+    return available[0] if available else None
+
+
 def _run(arguments: list[str]) -> subprocess.CompletedProcess[str]:
     return subprocess.run(arguments, text=True, capture_output=True, check=False)
 
