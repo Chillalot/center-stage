@@ -13,11 +13,18 @@ from typing import Any
 CONTROL_NAMES = ("brightness", "contrast", "saturation", "hue")
 
 DEFAULT_CONFIG: dict[str, Any] = {
-    "version": 1,
+    "version": 4,
     "language": "en",
     "selected_camera_id": None,
-    "auto_zoom": True,
+    "center_stage_enabled": True,
     "mirror_output": False,
+    "portrait_enabled": False,
+    "portrait_strength": 50,
+    "studio_light_enabled": False,
+    "studio_light_strength": 50,
+    "selected_microphone_id": None,
+    "microphone_muted": False,
+    "media_folder": "",
     "output_device": "/dev/video10",
     "width": 1920,
     "height": 1080,
@@ -58,13 +65,28 @@ def load_config(path: Path | None = None) -> dict[str, Any]:
     for key in DEFAULT_CONFIG:
         if key in raw:
             result[key] = raw[key]
+    if "center_stage_enabled" not in raw and "auto_zoom" in raw:
+        result["center_stage_enabled"] = bool(raw["auto_zoom"])
+    result["version"] = DEFAULT_CONFIG["version"]
     if result["language"] not in {"en", "vi"}:
         result["language"] = "en"
     if not isinstance(result["camera_controls"], dict):
         result["camera_controls"] = {}
-    result["auto_zoom"] = bool(result["auto_zoom"])
+    result["center_stage_enabled"] = bool(result["center_stage_enabled"])
     result["mirror_output"] = bool(result["mirror_output"])
+    result["portrait_enabled"] = bool(result["portrait_enabled"])
+    result["studio_light_enabled"] = bool(result["studio_light_enabled"])
+    result["portrait_strength"] = max(0, min(100, int(result["portrait_strength"])))
+    result["studio_light_strength"] = max(0, min(100, int(result["studio_light_strength"])))
+    result["microphone_muted"] = bool(result["microphone_muted"])
+    if not isinstance(result["media_folder"], str):
+        result["media_folder"] = ""
     return result
+
+
+def media_folder(config: dict[str, Any]) -> Path:
+    configured = str(config.get("media_folder") or "").strip()
+    return Path(configured).expanduser() if configured else Path.home() / "Pictures" / "Center Stage"
 
 
 def save_config(config: dict[str, Any], path: Path | None = None) -> None:

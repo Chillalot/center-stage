@@ -49,8 +49,8 @@ class TranslationTests(unittest.TestCase):
                 check=True,
             )
             translate = translator("vi", [locale_root])
-            self.assertEqual(translate("Start"), "Bắt đầu")
-            self.assertEqual(translate("External USB camera"), "Webcam USB rời")
+            self.assertEqual(translate("Camera"), "Camera")
+            self.assertEqual(translate("Microphone"), "Micrô")
 
 
 if __name__ == "__main__":

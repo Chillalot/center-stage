@@ -36,12 +36,176 @@ OUTPUT_FPS = 30
 OUTPUT_FORMAT = "YUY2"
 OUTPUT_DEVICE = "/dev/video10"
 DETECTION_WIDTH = 640
-DETECTION_INTERVAL = 2
+DETECTION_INTERVAL = 4
+SEGMENTATION_INTERVAL = 4
+SEGMENTATION_INPUT_WIDTH = 256
+EFFECTS_WIDTH = 640
+CONFIG_POLL_INTERVAL = 0.15
 MIN_DETECTION_CONFIDENCE = 0.5
 CAMERA_START_TIMEOUT_NS = 5 * Gst.SECOND
 CAMERA_STALL_SECONDS = 2.0
 
 Gst.init(None)
+cv2.setNumThreads(2)
+
+
+@dataclass(frozen=True)
+class AmbientLightState:
+    subject_luma: float = 0.45
+    background_luma: float = 0.45
+    highlight_ratio: float = 0.0
+    shadow_ratio: float = 0.0
+    horizontal_bias: float = 0.0
+    noise: float = 0.0
+
+
+def _subject_bounds(alpha: np.ndarray) -> tuple[int, int, int, int]:
+    points = cv2.findNonZero((alpha > 0.35).astype(np.uint8))
+    if points is None:
+        height, width = alpha.shape
+        return width // 4, height // 8, width // 2, height * 3 // 4
+    return cv2.boundingRect(points)
+
+
+class AmbientLightEstimator:
+    """Slow, scene-aware exposure statistics inferred from camera frames."""
+
+    def __init__(self) -> None:
+        self.state = AmbientLightState()
+        self._initialized = False
+        self._frame_index = 0
+
+    def update(self, frame: np.ndarray, person_mask: np.ndarray) -> AmbientLightState:
+        self._frame_index += 1
+        if self._initialized and self._frame_index % 10:
+            return self.state
+        width = min(EFFECTS_WIDTH, frame.shape[1])
+        height = max(1, round(frame.shape[0] * width / frame.shape[1]))
+        work = cv2.resize(frame, (width, height), interpolation=cv2.INTER_AREA)
+        alpha = cv2.resize(person_mask, (width, height), interpolation=cv2.INTER_LINEAR)
+        luma = cv2.cvtColor(work, cv2.COLOR_BGR2YCrCb)[:, :, 0].astype(np.float32) / 255.0
+        x, y, subject_width, subject_height = _subject_bounds(alpha)
+        face_x1 = max(0, x + round(subject_width * 0.17))
+        face_x2 = min(width, x + round(subject_width * 0.83))
+        face_y1 = max(0, y)
+        face_y2 = min(height, y + max(1, round(subject_height * 0.38)))
+        face = luma[face_y1:face_y2, face_x1:face_x2]
+        if face.size == 0:
+            face = luma
+        background = luma[alpha < 0.2]
+        if background.size < 64:
+            background = luma.reshape(-1)
+        midpoint = max(1, face.shape[1] // 2)
+        left = float(np.median(face[:, :midpoint]))
+        right = float(np.median(face[:, midpoint:])) if face.shape[1] > midpoint else left
+        denoised = cv2.GaussianBlur(face, (0, 0), 1.2)
+        measured = AmbientLightState(
+            subject_luma=float(np.median(face)),
+            background_luma=float(np.median(background)),
+            highlight_ratio=float(np.mean(face > 0.92)),
+            shadow_ratio=float(np.mean(face < 0.12)),
+            horizontal_bias=float(np.clip((right - left) * 2.5, -1.0, 1.0)),
+            noise=float(np.median(np.abs(face - denoised))),
+        )
+        if not self._initialized:
+            self.state = measured
+            self._initialized = True
+            return self.state
+        scene_delta = max(
+            abs(measured.subject_luma - self.state.subject_luma),
+            abs(measured.background_luma - self.state.background_luma),
+        )
+        rate = 0.32 if scene_delta > 0.16 else 0.10
+        self.state = AmbientLightState(
+            **{
+                field: float(getattr(self.state, field) * (1.0 - rate) + getattr(measured, field) * rate)
+                for field in AmbientLightState.__dataclass_fields__
+            }
+        )
+        return self.state
+
+
+class TemporalMaskStabilizer:
+    """Confidence and motion-aware mask smoothing with a fast ghost release."""
+
+    def __init__(self) -> None:
+        self.mask: np.ndarray | None = None
+        self._previous_gray: np.ndarray | None = None
+
+    def update(self, frame: np.ndarray, target: np.ndarray | None) -> np.ndarray:
+        gray = cv2.resize(
+            cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY), (160, 90), interpolation=cv2.INTER_AREA
+        ).astype(np.float32)
+        motion = 0.0
+        if self._previous_gray is not None:
+            motion = float(np.mean(np.abs(gray - self._previous_gray)) / 255.0)
+        self._previous_gray = gray
+        if target is None:
+            if self.mask is None:
+                width = min(EFFECTS_WIDTH, frame.shape[1])
+                height = max(1, round(frame.shape[0] * width / frame.shape[1]))
+                self.mask = np.ones((height, width), np.float32)
+            return self.mask
+        target = np.clip(target, 0.0, 1.0).astype(np.float32)
+        if self.mask is None or self.mask.shape != target.shape:
+            self.mask = target
+            return self.mask
+        motion_factor = float(np.clip(motion / 0.055, 0.0, 1.0))
+        acquire = 0.48 + 0.32 * motion_factor
+        release = 0.76 + 0.20 * motion_factor
+        rate = np.where(target < self.mask, release, acquire).astype(np.float32)
+        self.mask = self.mask + (target - self.mask) * rate
+        return self.mask
+
+
+@dataclass(frozen=True)
+class DeviceCapabilityProfile:
+    width: int
+    height: int
+    fps: float
+    gpu_segmentation: bool
+
+
+class AdaptiveQualityGovernor:
+    """Selects segmentation cadence from measured device headroom."""
+
+    LEVELS = ("eco", "balanced", "high")
+    INTERVALS = {"eco": 6, "balanced": 4, "high": 3}
+
+    def __init__(self, profile: DeviceCapabilityProfile):
+        self.level = "balanced" if profile.gpu_segmentation and profile.fps >= 25 else "eco"
+        self._last_wall = time.monotonic()
+        self._last_cpu = time.process_time()
+        self._candidate = self.level
+        self._candidate_count = 0
+        self.cpu_cores = 0.0
+
+    @property
+    def segmentation_interval(self) -> int:
+        return self.INTERVALS[self.level]
+
+    def update(self, measured_fps: float, segmentation_latency_ms: float, now: float) -> str:
+        elapsed = now - self._last_wall
+        if elapsed < 2.0:
+            return self.level
+        cpu_now = time.process_time()
+        self.cpu_cores = max(0.0, (cpu_now - self._last_cpu) / max(elapsed, 0.001))
+        self._last_cpu = cpu_now
+        self._last_wall = now
+        if measured_fps < 27.5 or self.cpu_cores > 2.25 or segmentation_latency_ms > 125:
+            candidate = "eco"
+        elif measured_fps >= 29.0 and self.cpu_cores < 1.35 and segmentation_latency_ms < 55:
+            candidate = "high"
+        else:
+            candidate = "balanced"
+        if candidate == self._candidate:
+            self._candidate_count += 1
+        else:
+            self._candidate = candidate
+            self._candidate_count = 1
+        if self._candidate_count >= 2:
+            self.level = candidate
+        return self.level
 
 
 class EngineError(RuntimeError):
@@ -101,6 +265,17 @@ def model_path() -> Path:
         if candidate.is_file():
             return candidate
     raise EngineError("model_missing", "MediaPipe face detector model is missing")
+
+
+def segmentation_model_path() -> Path:
+    candidates = (
+        Path(__file__).resolve().parent.parent / "selfie_segmenter_landscape.tflite",
+        Path("/opt/center-stage/share/selfie_segmenter_landscape.tflite"),
+    )
+    for candidate in candidates:
+        if candidate.is_file():
+            return candidate
+    raise EngineError("segmentation_model_missing", "MediaPipe selfie segmenter model is missing")
 
 
 def extract_input_caps(caps: Gst.Caps) -> list[InputCaps]:
@@ -642,6 +817,179 @@ def detect_faces(frame: np.ndarray, detector: vision.FaceDetector) -> list[FaceB
     return faces
 
 
+def create_person_segmenter(path: Path) -> vision.ImageSegmenter:
+    def options(delegate: python.BaseOptions.Delegate) -> vision.ImageSegmenterOptions:
+        return vision.ImageSegmenterOptions(
+            base_options=python.BaseOptions(model_asset_path=str(path), delegate=delegate),
+            running_mode=vision.RunningMode.IMAGE,
+            output_confidence_masks=True,
+            output_category_mask=False,
+        )
+
+    try:
+        return vision.ImageSegmenter.create_from_options(options(python.BaseOptions.Delegate.GPU))
+    except (RuntimeError, ValueError):
+        return vision.ImageSegmenter.create_from_options(options(python.BaseOptions.Delegate.CPU))
+
+
+def _mask_from_segmentation_result(result: Any, output_width: int, output_height: int) -> np.ndarray:
+    if not result.confidence_masks:
+        return np.ones((output_height, output_width), dtype=np.float32)
+    mask = np.asarray(result.confidence_masks[0].numpy_view(), dtype=np.float32).squeeze()
+    if mask.shape != (output_height, output_width):
+        mask = cv2.resize(mask, (output_width, output_height), interpolation=cv2.INTER_LINEAR)
+    mask = cv2.GaussianBlur(np.clip(mask, 0.0, 1.0), (0, 0), 1.35)
+    return np.clip(mask, 0.0, 1.0)
+
+
+class LivePersonSegmenter:
+    """Non-blocking MediaPipe LIVE_STREAM wrapper that retains only the newest mask."""
+
+    def __init__(self, path: Path, output_width: int, output_height: int):
+        self.output_width = output_width
+        self.output_height = output_height
+        self._lock = threading.Lock()
+        self._latest_mask: np.ndarray | None = None
+        self._latest_timestamp = -1
+        self._last_submit_timestamp = -1
+        self._submitted_at: dict[int, float] = {}
+        self.latency_ms = 0.0
+        self.gpu_enabled = True
+        try:
+            self._segmenter = self._create(path, python.BaseOptions.Delegate.GPU)
+        except (RuntimeError, ValueError):
+            self.gpu_enabled = False
+            self._segmenter = self._create(path, python.BaseOptions.Delegate.CPU)
+
+    def _create(self, path: Path, delegate: python.BaseOptions.Delegate) -> vision.ImageSegmenter:
+        options = vision.ImageSegmenterOptions(
+            base_options=python.BaseOptions(model_asset_path=str(path), delegate=delegate),
+            running_mode=vision.RunningMode.LIVE_STREAM,
+            output_confidence_masks=True,
+            output_category_mask=False,
+            result_callback=self._on_result,
+        )
+        return vision.ImageSegmenter.create_from_options(options)
+
+    def _on_result(self, result: Any, _image: mp.Image, timestamp_ms: int) -> None:
+        mask = _mask_from_segmentation_result(result, self.output_width, self.output_height)
+        completed_at = time.monotonic()
+        with self._lock:
+            submitted_at = self._submitted_at.pop(timestamp_ms, completed_at)
+            self._submitted_at = {
+                timestamp: started for timestamp, started in self._submitted_at.items() if timestamp > timestamp_ms
+            }
+            measured_latency = max(0.0, (completed_at - submitted_at) * 1000.0)
+            self.latency_ms = measured_latency if self.latency_ms == 0 else self.latency_ms * 0.8 + measured_latency * 0.2
+            self._latest_mask = mask
+            self._latest_timestamp = timestamp_ms
+
+    def submit(self, frame: np.ndarray, timestamp_ms: int) -> None:
+        input_width = min(SEGMENTATION_INPUT_WIDTH, frame.shape[1])
+        input_height = max(1, round(frame.shape[0] * input_width / frame.shape[1]))
+        inference_frame = cv2.resize(frame, (input_width, input_height), interpolation=cv2.INTER_AREA)
+        rgb = np.ascontiguousarray(cv2.cvtColor(inference_frame, cv2.COLOR_BGR2RGB))
+        with self._lock:
+            timestamp_ms = max(timestamp_ms, self._last_submit_timestamp + 1)
+            self._last_submit_timestamp = timestamp_ms
+            self._submitted_at[timestamp_ms] = time.monotonic()
+        self._segmenter.segment_async(
+            mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb), timestamp_ms
+        )
+
+    def latest_after(self, timestamp_ms: int) -> tuple[np.ndarray | None, int]:
+        with self._lock:
+            if self._latest_timestamp <= timestamp_ms or self._latest_mask is None:
+                return None, timestamp_ms
+            return self._latest_mask.copy(), self._latest_timestamp
+
+    def close(self) -> None:
+        self._segmenter.close()
+
+
+def segment_person(frame: np.ndarray, segmenter: vision.ImageSegmenter) -> np.ndarray:
+    input_width = min(SEGMENTATION_INPUT_WIDTH, frame.shape[1])
+    input_height = max(1, round(frame.shape[0] * input_width / frame.shape[1]))
+    inference_frame = cv2.resize(frame, (input_width, input_height), interpolation=cv2.INTER_AREA)
+    rgb = cv2.cvtColor(inference_frame, cv2.COLOR_BGR2RGB)
+    result = segmenter.segment(mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb))
+    output_width = min(EFFECTS_WIDTH, frame.shape[1])
+    output_height = max(1, round(frame.shape[0] * output_width / frame.shape[1]))
+    return _mask_from_segmentation_result(result, output_width, output_height)
+
+
+def _apply_natural_studio_light(
+    frame: np.ndarray,
+    alpha: np.ndarray,
+    amount: float,
+    ambient: AmbientLightState,
+) -> np.ndarray:
+    """Relight luminance with a face-aware soft key while preserving chroma."""
+    height, width = alpha.shape
+    x, y, subject_width, subject_height = _subject_bounds(alpha)
+    center_x = x + subject_width * (0.5 + 0.10 * ambient.horizontal_bias)
+    center_y = y + subject_height * 0.23
+    radius_x = max(18.0, subject_width * 0.48)
+    radius_y = max(20.0, subject_height * 0.38)
+    yy, xx = np.ogrid[:height, :width]
+    distance = ((xx - center_x) / radius_x) ** 2 + ((yy - center_y) / radius_y) ** 2
+    key_light = np.exp(-1.45 * distance).astype(np.float32)
+    subject_weight = alpha * (0.22 + 0.78 * key_light)
+
+    ycrcb = cv2.cvtColor(frame, cv2.COLOR_BGR2YCrCb)
+    luminance = ycrcb[:, :, 0].astype(np.float32) / 255.0
+    desired_subject = 0.57
+    exposure_need = float(np.clip(desired_subject - ambient.subject_luma, -0.08, 0.30))
+    highlight_guard = np.clip((0.96 - luminance) / 0.28, 0.0, 1.0)
+    highlight_guard *= max(0.35, 1.0 - ambient.highlight_ratio * 4.0)
+    shadow_weight = np.power(np.clip(1.0 - luminance, 0.0, 1.0), 1.35)
+    lift = amount * (0.025 + max(0.0, exposure_need) * 0.62)
+    subject_delta = lift * shadow_weight * highlight_guard * subject_weight
+    if exposure_need < 0:
+        subject_delta += amount * exposure_need * 0.18 * subject_weight
+
+    background_room = float(np.clip(ambient.background_luma - 0.16, 0.0, 0.55))
+    background_dim = amount * (0.012 + background_room * 0.13)
+    far_from_key = np.clip(1.0 - key_light, 0.0, 1.0)
+    background_delta = background_dim * (1.0 - alpha) * (0.42 + 0.58 * far_from_key)
+    adjusted = np.clip(luminance + subject_delta - background_delta, 0.0, 1.0)
+    ycrcb[:, :, 0] = np.rint(adjusted * 255.0).astype(np.uint8)
+    return cv2.cvtColor(ycrcb, cv2.COLOR_YCrCb2BGR)
+
+
+def apply_camera_effects(
+    frame: np.ndarray,
+    person_mask: np.ndarray,
+    *,
+    portrait_enabled: bool,
+    portrait_strength: int,
+    studio_light_enabled: bool,
+    studio_light_strength: int,
+    ambient_light: AmbientLightState | None = None,
+) -> np.ndarray:
+    """Composite adjustable background blur and virtual foreground lighting."""
+    original_size = (frame.shape[1], frame.shape[0])
+    work_width = min(EFFECTS_WIDTH, frame.shape[1])
+    work_height = max(1, round(frame.shape[0] * work_width / frame.shape[1]))
+    output = cv2.resize(frame, (work_width, work_height), interpolation=cv2.INTER_AREA)
+    alpha = cv2.resize(person_mask, (work_width, work_height), interpolation=cv2.INTER_LINEAR)
+    alpha = np.clip(alpha, 0.0, 1.0).astype(np.float32)
+    if portrait_enabled and portrait_strength > 0:
+        amount = max(0.0, min(1.0, portrait_strength / 100.0))
+        blurred = cv2.GaussianBlur(output, (0, 0), 1.5 + amount * 8.0)
+        background_weight = (1.0 - alpha) * amount
+        output = cv2.blendLinear(output, blurred, 1.0 - background_weight, background_weight)
+    if studio_light_enabled and studio_light_strength > 0:
+        amount = max(0.0, min(1.0, studio_light_strength / 100.0))
+        output = _apply_natural_studio_light(
+            output,
+            alpha,
+            amount,
+            ambient_light or AmbientLightState(),
+        )
+    return cv2.resize(output, original_size, interpolation=cv2.INTER_LINEAR)
+
+
 def _status_fields(
     camera: CameraDevice,
     mode: InputCaps,
@@ -649,10 +997,19 @@ def _status_fields(
     tracking: str,
     zoom: float,
     *,
+    center_stage_enabled: bool,
     pipewire_visible: bool,
+    portrait_enabled: bool = False,
+    portrait_strength: int = 50,
+    studio_light_enabled: bool = False,
+    studio_light_strength: int = 50,
+    effects_quality: str = "off",
+    ambient_light: AmbientLightState | None = None,
+    segmentation_latency_ms: float = 0.0,
+    effects_cpu_cores: float = 0.0,
     output_format: str = OUTPUT_FORMAT,
 ) -> dict[str, Any]:
-    return {
+    fields = {
         "capture_backend": "pipewire",
         "output_backend": "v4l2",
         "input": camera.path,
@@ -674,7 +1031,25 @@ def _status_fields(
         "format": output_format,
         "tracking": tracking,
         "zoom": round(zoom, 2),
+        "center_stage_enabled": center_stage_enabled,
+        "portrait_enabled": portrait_enabled,
+        "portrait_strength": portrait_strength,
+        "studio_light_enabled": studio_light_enabled,
+        "studio_light_strength": studio_light_strength,
+        "effects_quality": effects_quality,
+        "segmentation_latency_ms": round(segmentation_latency_ms, 1),
+        "effects_cpu_cores": round(effects_cpu_cores, 2),
     }
+    if ambient_light is not None:
+        fields["ambient_light"] = {
+            "subject_luma": round(ambient_light.subject_luma, 3),
+            "background_luma": round(ambient_light.background_luma, 3),
+            "highlight_ratio": round(ambient_light.highlight_ratio, 3),
+            "shadow_ratio": round(ambient_light.shadow_ratio, 3),
+            "horizontal_bias": round(ambient_light.horizontal_bias, 3),
+            "noise": round(ambient_light.noise, 4),
+        }
+    return fields
 
 
 def run_pipeline(
@@ -698,6 +1073,12 @@ def run_pipeline(
 
     controls = camera_control_values(config, camera.camera_id)
     apply_saved_controls(camera, controls)
+    center_stage_enabled = bool(config.get("center_stage_enabled", True))
+    mirror_output = bool(config.get("mirror_output", False))
+    portrait_enabled = bool(config.get("portrait_enabled", False))
+    portrait_strength = int(config.get("portrait_strength", 50))
+    studio_light_enabled = bool(config.get("studio_light_enabled", False))
+    studio_light_strength = int(config.get("studio_light_strength", 50))
     if publish_status:
         write_status(
             "starting",
@@ -709,23 +1090,57 @@ def run_pipeline(
             output_width=OUTPUT_WIDTH,
             output_height=OUTPUT_HEIGHT,
             output_fps=OUTPUT_FPS,
-            tracking="SEARCHING",
+            tracking="SEARCHING" if center_stage_enabled else "OFF",
+            center_stage_enabled=center_stage_enabled,
+            portrait_enabled=portrait_enabled,
+            portrait_strength=portrait_strength,
+            studio_light_enabled=studio_light_enabled,
+            studio_light_strength=studio_light_strength,
         )
 
     capture = PipeWireCameraCapture(camera)
     output = V4L2VirtualOutput(output_device, output_format=output_format)
     detector = None
+    segmenter: LivePersonSegmenter | None = None
     try:
         frame, mode = capture.start()
         detector = create_face_detector(model_path())
-        framer = AutoFramer(mode.width, mode.height, auto_zoom=bool(config.get("auto_zoom", True)))
+        framer = AutoFramer(
+            mode.width,
+            mode.height,
+            center_stage_enabled=center_stage_enabled,
+        )
         fps_counter = FpsCounter()
         frame_index = 0
         now = time.monotonic()
-        faces = detect_faces(frame, detector)
-        snapshot = framer.update(faces, True, now)
+        faces = detect_faces(frame, detector) if center_stage_enabled else ()
+        snapshot = framer.update(faces, center_stage_enabled, now)
         clean_output = crop_and_resize(frame, snapshot.crop, OUTPUT_WIDTH, OUTPUT_HEIGHT)
-        latest_output = cv2.flip(clean_output, 1) if bool(config.get("mirror_output", False)) else clean_output
+        mask_stabilizer = TemporalMaskStabilizer()
+        ambient_estimator = AmbientLightEstimator()
+        person_mask = mask_stabilizer.update(clean_output, None)
+        ambient_light = ambient_estimator.state
+        quality_governor: AdaptiveQualityGovernor | None = None
+        last_segment_timestamp = -1
+        if portrait_enabled or studio_light_enabled:
+            segmenter = LivePersonSegmenter(
+                segmentation_model_path(), person_mask.shape[1], person_mask.shape[0]
+            )
+            quality_governor = AdaptiveQualityGovernor(
+                DeviceCapabilityProfile(mode.width, mode.height, mode.fps, segmenter.gpu_enabled)
+            )
+            segmenter.submit(clean_output, int(now * 1000))
+            ambient_light = ambient_estimator.update(clean_output, person_mask)
+            clean_output = apply_camera_effects(
+                clean_output,
+                person_mask,
+                portrait_enabled=portrait_enabled,
+                portrait_strength=portrait_strength,
+                studio_light_enabled=studio_light_enabled,
+                studio_light_strength=studio_light_strength,
+                ambient_light=ambient_light,
+            )
+        latest_output = cv2.flip(clean_output, 1) if mirror_output else clean_output
         output.start(latest_output)
         measured_fps = fps_counter.tick(now)
         if publish_status:
@@ -738,13 +1153,24 @@ def run_pipeline(
                     measured_fps,
                     snapshot.status,
                     snapshot.zoom,
+                    center_stage_enabled=center_stage_enabled,
                     pipewire_visible=output.refresh_pipewire_visibility(),
+                    portrait_enabled=portrait_enabled,
+                    portrait_strength=portrait_strength,
+                    studio_light_enabled=studio_light_enabled,
+                    studio_light_strength=studio_light_strength,
+                    effects_quality=(quality_governor.level if quality_governor and (portrait_enabled or studio_light_enabled) else "off"),
+                    ambient_light=ambient_light,
+                    segmentation_latency_ms=segmenter.latency_ms if segmenter else 0.0,
+                    effects_cpu_cores=quality_governor.cpu_cores if quality_governor else 0.0,
                     output_format=output.output_format,
                 ),
             )
 
         last_camera_frame = now
         last_status_update = 0.0
+        last_config_check = now
+        effects_active = portrait_enabled or studio_light_enabled
         next_output_at = time.monotonic() + 1.0 / OUTPUT_FPS
         while not stopper.is_set():
             new_frame = capture.read(0)
@@ -752,13 +1178,59 @@ def run_pipeline(
             if new_frame is not None:
                 frame = new_frame
                 last_camera_frame = now
-                detection_ran = frame_index % DETECTION_INTERVAL == 0
+                if publish_status and now - last_config_check >= CONFIG_POLL_INTERVAL:
+                    live_config = load_config()
+                    requested_center_stage = bool(
+                        live_config.get("center_stage_enabled", True)
+                    )
+                    if requested_center_stage != center_stage_enabled:
+                        center_stage_enabled = requested_center_stage
+                        framer = AutoFramer(
+                            mode.width,
+                            mode.height,
+                            center_stage_enabled=center_stage_enabled,
+                        )
+                    mirror_output = bool(live_config.get("mirror_output", False))
+                    portrait_enabled = bool(live_config.get("portrait_enabled", False))
+                    portrait_strength = int(live_config.get("portrait_strength", 50))
+                    studio_light_enabled = bool(live_config.get("studio_light_enabled", False))
+                    studio_light_strength = int(live_config.get("studio_light_strength", 50))
+                    if (portrait_enabled or studio_light_enabled) and segmenter is None:
+                        segmenter = LivePersonSegmenter(
+                            segmentation_model_path(), person_mask.shape[1], person_mask.shape[0]
+                        )
+                        quality_governor = AdaptiveQualityGovernor(
+                            DeviceCapabilityProfile(mode.width, mode.height, mode.fps, segmenter.gpu_enabled)
+                        )
+                        last_segment_timestamp = -1
+                        segmenter.submit(clean_output, int(now * 1000))
+                    last_config_check = now
+                detection_ran = (
+                    center_stage_enabled and frame_index % DETECTION_INTERVAL == 0
+                )
                 faces = detect_faces(frame, detector) if detection_ran else ()
                 snapshot = framer.update(faces, detection_ran, now)
                 clean_output = crop_and_resize(frame, snapshot.crop, OUTPUT_WIDTH, OUTPUT_HEIGHT)
+                effects_active = portrait_enabled or studio_light_enabled
+                if effects_active and segmenter is not None:
+                    interval = quality_governor.segmentation_interval if quality_governor else SEGMENTATION_INTERVAL
+                    if frame_index % interval == 1:
+                        segmenter.submit(clean_output, int(now * 1000))
+                    next_mask, last_segment_timestamp = segmenter.latest_after(last_segment_timestamp)
+                    person_mask = mask_stabilizer.update(clean_output, next_mask)
+                    ambient_light = ambient_estimator.update(clean_output, person_mask)
+                    clean_output = apply_camera_effects(
+                        clean_output,
+                        person_mask,
+                        portrait_enabled=portrait_enabled,
+                        portrait_strength=portrait_strength,
+                        studio_light_enabled=studio_light_enabled,
+                        studio_light_strength=studio_light_strength,
+                        ambient_light=ambient_light,
+                    )
                 latest_output = (
                     cv2.flip(clean_output, 1)
-                    if bool(config.get("mirror_output", False))
+                    if mirror_output
                     else clean_output
                 )
                 frame_index += 1
@@ -767,6 +1239,8 @@ def run_pipeline(
 
             output.send(latest_output)
             measured_fps = fps_counter.tick(now)
+            if effects_active and quality_governor is not None and segmenter is not None:
+                quality_governor.update(measured_fps, segmenter.latency_ms, now)
             if publish_status and now - last_status_update >= 0.5:
                 write_status(
                     "running",
@@ -777,7 +1251,16 @@ def run_pipeline(
                         measured_fps,
                         snapshot.status,
                         snapshot.zoom,
+                        center_stage_enabled=center_stage_enabled,
                         pipewire_visible=output.refresh_pipewire_visibility(),
+                        portrait_enabled=portrait_enabled,
+                        portrait_strength=portrait_strength,
+                        studio_light_enabled=studio_light_enabled,
+                        studio_light_strength=studio_light_strength,
+                        effects_quality=(quality_governor.level if quality_governor and effects_active else "off"),
+                        ambient_light=ambient_light,
+                        segmentation_latency_ms=segmenter.latency_ms if segmenter else 0.0,
+                        effects_cpu_cores=quality_governor.cpu_cores if quality_governor else 0.0,
                         output_format=output.output_format,
                     ),
                 )
@@ -793,6 +1276,8 @@ def run_pipeline(
         output.close()
         if detector is not None:
             detector.close()
+        if segmenter is not None:
+            segmenter.close()
         capture.close()
 
 

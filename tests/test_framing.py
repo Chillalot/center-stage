@@ -26,7 +26,7 @@ class FramingTests(unittest.TestCase):
         self.assertIs(select_primary_face([far, near], previous), near)
 
     def test_crop_always_stays_inside_frame(self):
-        framer = AutoFramer(1920, 1080, auto_zoom=True)
+        framer = AutoFramer(1920, 1080, center_stage_enabled=True)
         face = FaceBox(1850, 1000, 60, 60)
         now = 1.0
         for _ in range(120):
@@ -38,13 +38,15 @@ class FramingTests(unittest.TestCase):
         self.assertLessEqual(crop.x + crop.width, 1920)
         self.assertLessEqual(crop.y + crop.height, 1080)
 
-    def test_pan_only_keeps_base_zoom(self):
-        framer = AutoFramer(1920, 1080, auto_zoom=False)
+    def test_disabled_center_stage_returns_full_static_frame(self):
+        framer = AutoFramer(1920, 1080, center_stage_enabled=False)
         snapshot = framer.update([FaceBox(800, 300, 100, 100)], True, 1.0)
-        self.assertEqual(snapshot.zoom, BASE_ZOOM)
+        self.assertEqual(snapshot.zoom, 1.0)
+        self.assertEqual(snapshot.status, "OFF")
+        self.assertEqual(snapshot.crop, CropWindow(0, 0, 1920, 1080))
 
     def test_short_face_loss_holds_then_recenters(self):
-        framer = AutoFramer(1920, 1080, auto_zoom=True)
+        framer = AutoFramer(1920, 1080, center_stage_enabled=True)
         framer.update([FaceBox(800, 300, 100, 100)], True, 1.0)
         held = framer.update([], True, 1.0 + LOST_HOLD_SECONDS / 2)
         recentered = framer.update([], True, 1.0 + LOST_HOLD_SECONDS + 0.1)

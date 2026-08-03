@@ -2,7 +2,7 @@
 set -euo pipefail
 
 PROJECT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
-PACKAGE_VERSION=4.0.5
+PACKAGE_VERSION=4.4.0
 PACKAGE_ARCH=amd64
 PACKAGE_NAME=center-stage
 OUTPUT_DIR="$PROJECT_DIR/dist"
@@ -38,6 +38,7 @@ find "$PACKAGE_ROOT/opt/center-stage/app" -type f -name '*.pyc' -delete
 find "$PACKAGE_ROOT/opt/center-stage/app" -type d -exec chmod 0755 {} +
 find "$PACKAGE_ROOT/opt/center-stage/app" -type f -exec chmod 0644 {} +
 cp "$PROJECT_DIR/blaze_face_short_range.tflite" "$PACKAGE_ROOT/opt/center-stage/share/"
+cp "$PROJECT_DIR/selfie_segmenter_landscape.tflite" "$PACKAGE_ROOT/opt/center-stage/share/"
 
 "$BUILD_PYTHON" -m pip install \
     --disable-pip-version-check \
@@ -74,21 +75,24 @@ rm -rf \
 
 PYTHONPATH="$PACKAGE_ROOT/opt/center-stage/app:$PACKAGE_ROOT/opt/center-stage/vendor:/usr/lib/python3/dist-packages" \
 MODEL_PATH="$PACKAGE_ROOT/opt/center-stage/share/blaze_face_short_range.tflite" \
+SEGMENTATION_MODEL_PATH="$PACKAGE_ROOT/opt/center-stage/share/selfie_segmenter_landscape.tflite" \
 /usr/bin/python3 - <<'PY'
 import os
 import cv2
 import numpy as np
-from center_stage.engine import OUTPUT_FORMAT, create_face_detector, detect_faces, raw_bgr_payload
+from center_stage.engine import OUTPUT_FORMAT, create_face_detector, create_person_segmenter, detect_faces, raw_bgr_payload
 
 frame = np.zeros((720, 1280, 3), dtype=np.uint8)
 resized = cv2.resize(frame, (1920, 1080))
 mirrored = cv2.flip(resized, 1)
 payload = raw_bgr_payload(mirrored)
 detector = create_face_detector(os.environ["MODEL_PATH"])
+segmenter = create_person_segmenter(os.environ["SEGMENTATION_MODEL_PATH"])
 try:
     detect_faces(frame, detector)
 finally:
     detector.close()
+    segmenter.close()
 assert resized.shape == (1080, 1920, 3)
 assert OUTPUT_FORMAT == "YUY2"
 assert len(payload) == 1080 * 1920 * 3
@@ -102,6 +106,9 @@ install -m 0755 "$PROJECT_DIR/packaging/center-stage-launcher" "$PACKAGE_ROOT/us
 install -m 0644 "$PROJECT_DIR/packaging/center-stage-engine.service" "$PACKAGE_ROOT/usr/lib/systemd/user/"
 install -m 0644 "$PROJECT_DIR/packaging/center-stage.desktop" "$PACKAGE_ROOT/usr/share/applications/"
 install -m 0644 "$PROJECT_DIR/packaging/center-stage.svg" "$PACKAGE_ROOT/usr/share/icons/hicolor/scalable/apps/"
+install -m 0644 "$PROJECT_DIR/packaging/center-stage-idle.svg" "$PACKAGE_ROOT/usr/share/icons/hicolor/scalable/apps/"
+install -m 0644 "$PROJECT_DIR/packaging/center-stage-active.svg" "$PACKAGE_ROOT/usr/share/icons/hicolor/scalable/apps/"
+install -m 0644 "$PROJECT_DIR/packaging/center-stage-warning.svg" "$PACKAGE_ROOT/usr/share/icons/hicolor/scalable/apps/"
 install -m 0644 "$PROJECT_DIR/packaging/modules-load.conf" "$PACKAGE_ROOT/etc/modules-load.d/center-stage.conf"
 install -m 0644 "$PROJECT_DIR/packaging/modprobe.conf" "$PACKAGE_ROOT/etc/modprobe.d/center-stage.conf"
 install -m 0755 "$PROJECT_DIR/packaging/postinst" "$PACKAGE_ROOT/DEBIAN/postinst"
@@ -117,10 +124,10 @@ Section: video
 Priority: optional
 Architecture: $PACKAGE_ARCH
 Maintainer: Center Stage Local <local@center-stage.invalid>
-Depends: python3 (>= 3.12), python3-pil, python3-gi, gir1.2-gtk-3.0, gir1.2-gstreamer-1.0, gir1.2-gst-plugins-base-1.0, gstreamer1.0-gtk3, gstreamer1.0-pipewire, gstreamer1.0-plugins-base, gstreamer1.0-plugins-good, gstreamer1.0-plugins-bad, v4l-utils, pipewire, wireplumber
+Depends: python3 (>= 3.12), python3-pil, python3-gi, gir1.2-gtk-3.0, gir1.2-ayatanaappindicator3-0.1, gir1.2-gstreamer-1.0, gir1.2-gst-plugins-base-1.0, gstreamer1.0-gtk3, gstreamer1.0-pipewire, gstreamer1.0-plugins-base, gstreamer1.0-plugins-good, gstreamer1.0-plugins-bad, gstreamer1.0-plugins-ugly, pulseaudio-utils, v4l-utils, pipewire, wireplumber
 Suggests: v4l2loopback-dkms, v4l2loopback-utils
 Installed-Size: $INSTALLED_SIZE
-Description: Bilingual auto-framing virtual camera
+Description: Bilingual Photo Booth and auto-framing virtual camera
  Center Stage turns a physical webcam into a face-tracking virtual camera.
  The GTK3 controller supports English and Vietnamese.
 EOF

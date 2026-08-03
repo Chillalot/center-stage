@@ -96,12 +96,12 @@ def select_primary_face(
 
 
 class AutoFramer:
-    def __init__(self, frame_width: int, frame_height: int, auto_zoom: bool):
+    def __init__(self, frame_width: int, frame_height: int, center_stage_enabled: bool):
         if frame_width <= 0 or frame_height <= 0:
             raise ValueError("Frame dimensions must be positive")
         self.frame_width = frame_width
         self.frame_height = frame_height
-        self.auto_zoom = auto_zoom
+        self.center_stage_enabled = center_stage_enabled
         self.camera_x = frame_width / 2.0
         self.camera_y = frame_height / 2.0
         self.current_zoom = BASE_ZOOM
@@ -115,6 +115,13 @@ class AutoFramer:
     def update(
         self, faces: Sequence[FaceBox], detection_ran: bool, now: float
     ) -> FramingSnapshot:
+        if not self.center_stage_enabled:
+            return FramingSnapshot(
+                status="OFF",
+                face_box=None,
+                crop=CropWindow(0, 0, self.frame_width, self.frame_height),
+                zoom=1.0,
+            )
         dt = self._frame_dt(now)
         if detection_ran:
             self._update_detection(faces, now)
@@ -134,9 +141,6 @@ class AutoFramer:
                 self._recenter(dt)
                 self.smoothed_face = None
 
-        if not self.auto_zoom:
-            self.target_zoom = BASE_ZOOM
-            self.current_zoom = BASE_ZOOM
         self._clamp_camera_to_frame()
         return FramingSnapshot(
             status=status,
@@ -192,19 +196,18 @@ class AutoFramer:
         self.last_detection_had_face = True
 
     def _track_face(self, face: FaceBox, dt: float) -> None:
-        if self.auto_zoom:
-            source_face_ratio = face.height / self.frame_height
-            framed_face_ratio = source_face_ratio * self.current_zoom
-            if framed_face_ratio < ZOOM_RATIO_LOW or framed_face_ratio > ZOOM_RATIO_HIGH:
-                self.target_zoom = clamp(
-                    DESIRED_FACE_RATIO / max(source_face_ratio, 1e-6),
-                    BASE_ZOOM,
-                    MAX_ZOOM,
-                )
-            self.current_zoom += (
-                self.target_zoom - self.current_zoom
-            ) * smoothing_alpha(dt, ZOOM_SMOOTH_TAU)
-            self.current_zoom = clamp(self.current_zoom, BASE_ZOOM, MAX_ZOOM)
+        source_face_ratio = face.height / self.frame_height
+        framed_face_ratio = source_face_ratio * self.current_zoom
+        if framed_face_ratio < ZOOM_RATIO_LOW or framed_face_ratio > ZOOM_RATIO_HIGH:
+            self.target_zoom = clamp(
+                DESIRED_FACE_RATIO / max(source_face_ratio, 1e-6),
+                BASE_ZOOM,
+                MAX_ZOOM,
+            )
+        self.current_zoom += (
+            self.target_zoom - self.current_zoom
+        ) * smoothing_alpha(dt, ZOOM_SMOOTH_TAU)
+        self.current_zoom = clamp(self.current_zoom, BASE_ZOOM, MAX_ZOOM)
 
         crop_width, crop_height = self._floating_crop_size()
         desired_x = face.center_x

@@ -1,128 +1,301 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the Center Stage package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: Center Stage 4.0.5\n"
+"Project-Id-Version: Center Stage 4.4.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-08-03 19:23+0700\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-msgid "Center Stage is off"
+#: center_stage/gui.py:60
+msgid "Photo"
 msgstr ""
 
-msgid "Opening camera…"
+#: center_stage/gui.py:60
+msgid "4-up"
 msgstr ""
 
-msgid "Center Stage is ready"
+#: center_stage/gui.py:60
+msgid "Video"
 msgstr ""
 
-msgid "The camera is being used by another application."
+#: center_stage/gui.py:62
+msgid "Reactions"
 msgstr ""
 
-msgid "The selected camera is not connected."
+#: center_stage/gui.py:63
+msgid "Background"
 msgstr ""
 
-msgid "The camera could not be opened."
-msgstr ""
-
-msgid "PipeWire cannot share the selected camera."
-msgstr ""
-
-msgid "The camera was disconnected."
-msgstr ""
-
-msgid "The Center Stage virtual camera is unavailable."
-msgstr ""
-
-msgid "Video is running, but PipeWire cannot see the virtual camera."
-msgstr ""
-
-msgid "The Center Stage PipeWire camera is unavailable."
-msgstr ""
-
-msgid "The virtual camera output could not be started."
-msgstr ""
-
-msgid "The v4l2loopback driver is not installed."
-msgstr ""
-
-msgid "Another device is using /dev/video10."
-msgstr ""
-
-msgid "The face detection model is missing."
-msgstr ""
-
-msgid "Input and output cameras cannot be the same."
-msgstr ""
-
-msgid "Center Stage is already running."
-msgstr ""
-
-msgid "The camera resolution changed unexpectedly."
-msgstr ""
-
-msgid "Center Stage stopped because of an internal error."
-msgstr ""
-
-msgid "The Center Stage background service is not installed."
-msgstr ""
-
+#: center_stage/gui.py:66
 msgid "Brightness"
 msgstr ""
 
+#: center_stage/gui.py:67
 msgid "Contrast"
 msgstr ""
 
+#: center_stage/gui.py:68
 msgid "Saturation"
 msgstr ""
 
+#: center_stage/gui.py:69
 msgid "Hue"
 msgstr ""
 
-msgid "Input camera"
+#: center_stage/gui.py:72 center_stage/gui.py:303 center_stage/gui.py:376
+msgid "Turn camera on"
 msgstr ""
 
-msgid "Settings"
+#: center_stage/gui.py:73
+msgid "Connecting camera…"
 msgstr ""
 
-msgid "Choose a camera, then select Start to create your virtual camera."
+#: center_stage/gui.py:74 center_stage/gui.py:1141
+msgid "Camera is ready"
 msgstr ""
 
-msgid "Start"
+#: center_stage/gui.py:75
+msgid "The camera is being used by another application."
 msgstr ""
 
-msgid "Auto Zoom"
+#: center_stage/gui.py:76
+msgid "The selected camera is not connected."
 msgstr ""
 
-msgid "Mirror Output"
+#: center_stage/gui.py:77
+msgid "The camera could not be opened."
 msgstr ""
 
+#: center_stage/gui.py:78
+msgid "PipeWire cannot share the selected camera."
+msgstr ""
+
+#: center_stage/gui.py:79
+msgid "The camera was disconnected."
+msgstr ""
+
+#: center_stage/gui.py:80
+msgid "The Center Stage virtual camera is unavailable."
+msgstr ""
+
+#: center_stage/gui.py:81
+msgid "Video is running, but PipeWire cannot see the virtual camera."
+msgstr ""
+
+#: center_stage/gui.py:82
+msgid "The Center Stage PipeWire camera is unavailable."
+msgstr ""
+
+#: center_stage/gui.py:83
+msgid "The virtual camera output could not be started."
+msgstr ""
+
+#: center_stage/gui.py:84
+msgid "The v4l2loopback driver is not installed."
+msgstr ""
+
+#: center_stage/gui.py:85
+msgid "Another device is using /dev/video10."
+msgstr ""
+
+#: center_stage/gui.py:86
+msgid "The face detection model is missing."
+msgstr ""
+
+#: center_stage/gui.py:87
+msgid "Input and output cameras cannot be the same."
+msgstr ""
+
+#: center_stage/gui.py:88
+msgid "Center Stage is already running."
+msgstr ""
+
+#: center_stage/gui.py:89
+msgid "The camera resolution changed unexpectedly."
+msgstr ""
+
+#: center_stage/gui.py:90
+msgid "Center Stage stopped because of an internal error."
+msgstr ""
+
+#: center_stage/gui.py:91
+msgid "The Center Stage background service is not installed."
+msgstr ""
+
+#: center_stage/gui.py:320
+msgid "Turn on a camera to take photos or record video."
+msgstr ""
+
+#: center_stage/gui.py:347 center_stage/gui.py:354 center_stage/gui.py:812
+msgid "Capture"
+msgstr ""
+
+#: center_stage/gui.py:354 center_stage/gui.py:812 center_stage/gui.py:904
+msgid "Record"
+msgstr ""
+
+#: center_stage/gui.py:380
+msgid "Center Stage"
+msgstr ""
+
+#: center_stage/gui.py:386
+msgid "Portrait"
+msgstr ""
+
+#: center_stage/gui.py:386
+msgid "Background Blur"
+msgstr ""
+
+#: center_stage/gui.py:389
+msgid "Studio Light"
+msgstr ""
+
+#: center_stage/gui.py:389
+msgid "Virtual Light"
+msgstr ""
+
+#: center_stage/gui.py:398
+msgid "Mirror Camera"
+msgstr ""
+
+#: center_stage/gui.py:403
+msgid "Camera"
+msgstr ""
+
+#: center_stage/gui.py:407
+msgid "Microphone"
+msgstr ""
+
+#: center_stage/gui.py:411
+msgid "Mute Microphone"
+msgstr ""
+
+#: center_stage/gui.py:415 center_stage/gui.py:490
+msgid "Image Adjustments"
+msgstr ""
+
+#: center_stage/gui.py:418
+msgid "Media Folder…"
+msgstr ""
+
+#: center_stage/gui.py:421
 msgid "Language"
 msgstr ""
 
-msgid "Image Settings"
+#: center_stage/gui.py:433
+msgid "Show Center Stage"
 msgstr ""
 
+#: center_stage/gui.py:436 center_stage/gui.py:1145
+msgid "Disconnect Camera"
+msgstr ""
+
+#: center_stage/gui.py:439
+msgid "Quit Center Stage"
+msgstr ""
+
+#: center_stage/gui.py:500
 msgid "Reset Image Settings"
 msgstr ""
 
-msgid "Integrated camera"
+#: center_stage/gui.py:545
+msgid "Camera changed"
 msgstr ""
 
-msgid "External USB camera"
+#: center_stage/gui.py:545
+#, python-brace-format
+msgid "Switched to {camera} because the previous camera disconnected."
 msgstr ""
 
-msgid "Not supported by this camera"
+#: center_stage/gui.py:553
+msgid "Microphone disconnected"
 msgstr ""
 
-msgid "Checking camera controls…"
+#: center_stage/gui.py:553 center_stage/gui.py:932
+msgid "Video recording continues without sound."
 msgstr ""
 
-msgid "Select a connected camera first."
+#: center_stage/gui.py:582
+msgid "No camera connected"
 msgstr ""
 
-msgid "Restarting…"
+#: center_stage/gui.py:592
+msgid "Refresh Devices"
 msgstr ""
 
-msgid "Starting…"
+#: center_stage/gui.py:607
+msgid "No microphone connected"
 msgstr ""
 
+#: center_stage/gui.py:648
+msgid "Microphone changed"
+msgstr ""
+
+#: center_stage/gui.py:648
+msgid "The new microphone will be used for the next video."
+msgstr ""
+
+#: center_stage/gui.py:798
+msgid "Choose Media Folder"
+msgstr ""
+
+#: center_stage/gui.py:799
+msgid "Cancel"
+msgstr ""
+
+#: center_stage/gui.py:799
+msgid "Select"
+msgstr ""
+
+#: center_stage/gui.py:893
 msgid "Stop"
+msgstr ""
+
+#: center_stage/gui.py:913
+msgid "Video recovered"
+msgstr ""
+
+#: center_stage/gui.py:913
+msgid ""
+"The selected folder was unavailable; the video was kept in the recovery "
+"folder."
+msgstr ""
+
+#: center_stage/gui.py:932
+msgid "Microphone unavailable"
+msgstr ""
+
+#: center_stage/gui.py:943
+msgid "Media could not be saved"
+msgstr ""
+
+#: center_stage/gui.py:953
+msgid "Your photos and videos will appear here."
+msgstr ""
+
+#: center_stage/gui.py:974
+msgid "Open Folder"
+msgstr ""
+
+#: center_stage/gui.py:976 center_stage/gui.py:989
+msgid "Delete"
+msgstr ""
+
+#: center_stage/gui.py:988
+msgid "Delete this media file?"
+msgstr ""
+
+#: center_stage/gui.py:1145
+msgid "Connect Camera"
 msgstr ""

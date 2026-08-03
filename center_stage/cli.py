@@ -17,7 +17,7 @@ from .engine import EngineError, acquire_engine_lock, run_pipeline
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Center Stage auto-framing virtual camera")
     parser.add_argument("--input", help="camera ID or V4L2 path (default: saved camera)")
-    parser.add_argument("--no-auto-zoom", action="store_true")
+    parser.add_argument("--no-center-stage", "--no-auto-zoom", action="store_true")
     parser.add_argument("--mirror-output", action="store_true")
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     return parser.parse_args(argv)
@@ -66,7 +66,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         config.update(
             {
                 "selected_camera_id": camera.camera_id,
-                "auto_zoom": not args.no_auto_zoom,
+                "center_stage_enabled": not args.no_center_stage,
                 "mirror_output": args.mirror_output,
             }
         )

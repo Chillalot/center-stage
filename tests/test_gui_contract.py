@@ -27,6 +27,55 @@ class GuiContractTests(unittest.TestCase):
         self.assertIn("shmsrc socket-path=", self.source)
         self.assertNotIn("v4l2src device=/dev/video10", self.source)
         self.assertNotIn("center-stage.virtual", self.source)
+        self.assertNotIn("videoflip method=horizontal-flip", self.source)
+
+    def test_photo_booth_and_advanced_tray_controls_are_present(self):
+        for token in (
+            "class PhotoBoothWindow",
+            "class AppShell",
+            "class TrayController",
+            '(("photo", N_("Photo")), ("four_up", N_("4-up")), ("video", N_("Video")))',
+            "AyatanaAppIndicator3.Indicator.new",
+            'self._("Center Stage")',
+            'self._("Portrait")',
+            'self._("Studio Light")',
+            'N_("Reactions")',
+            'N_("Background")',
+            'self._("Microphone")',
+            'self._("Mute Microphone")',
+            'self._("Media Folder…")',
+        ):
+            self.assertIn(token, self.source)
+        self.assertNotIn("_build_calls_page", self.source)
+        self.assertNotIn("_build_studio_page", self.source)
+
+    def test_language_change_does_not_replace_window_or_indicator(self):
+        self.assertIn("def _retranslate_in_place", self.source)
+        self.assertNotIn("reload_window", self.source)
+        self.assertEqual(self.source.count("AyatanaAppIndicator3.Indicator.new"), 1)
+
+    def test_effects_and_image_adjustments_use_tray_popups(self):
+        for token in (
+            "class TraySliderPopup",
+            "_append_effect_controls",
+            'self._("Background Blur")',
+            'self._("Virtual Light")',
+            "_show_image_adjustments_popup",
+            "present_at_pointer",
+            "Gtk.Scale.new_with_range",
+        ):
+            self.assertIn(token, self.source)
+        self.assertNotIn("_scale_menu_item", self.source)
+        self.assertNotIn("_build_effect_submenu", self.source)
+        self.assertNotIn("Gtk.Dialog(title=self._(\"Image Adjustments\")", self.source)
+
+    def test_main_window_has_no_start_stop_button(self):
+        self.assertNotIn('Gtk.Button.new_with_label(self._("Start"))', self.source)
+        self.assertNotIn('Gtk.Button.new_with_label(self._("Stop"))', self.source)
+
+    def test_close_hides_and_tray_quit_stops_service(self):
+        self.assertIn('self.connect("delete-event", self._on_delete_event)', self.source)
+        self.assertIn('self._service_action("stop", self._finish_quit)', self.source)
 
 
 if __name__ == "__main__":
