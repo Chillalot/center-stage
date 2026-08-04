@@ -6,8 +6,11 @@ from pathlib import Path
 from center_stage.config import (
     camera_control_values,
     load_config,
+    media_folders,
+    pictures_folder,
     save_config,
     set_camera_control_value,
+    videos_folder,
 )
 
 
@@ -39,10 +42,36 @@ class ConfigTests(unittest.TestCase):
         self.assertIsNone(config["selected_microphone_id"])
         self.assertFalse(config["microphone_muted"])
         self.assertEqual(config["media_folder"], "")
+        self.assertEqual(pictures_folder(config), Path.home() / "Pictures")
+        self.assertEqual(videos_folder(config), Path.home() / "Videos")
         self.assertFalse(config["portrait_enabled"])
         self.assertEqual(config["portrait_strength"], 50)
         self.assertFalse(config["studio_light_enabled"])
         self.assertEqual(config["studio_light_strength"], 50)
+        self.assertEqual(config["theme"], "light")
+        self.assertEqual(config["capture_mode"], "photo")
+
+    def test_legacy_media_folder_stays_visible_without_changing_new_defaults(self):
+        with tempfile.TemporaryDirectory() as directory:
+            legacy = Path(directory) / "Center Stage"
+            path = Path(directory) / "config.json"
+            path.write_text(json.dumps({"media_folder": str(legacy)}), encoding="utf-8")
+            config = load_config(path)
+        self.assertEqual(pictures_folder(config), Path.home() / "Pictures")
+        self.assertEqual(videos_folder(config), Path.home() / "Videos")
+        self.assertIn(legacy, media_folders(config))
+        self.assertFalse(config["gallery_collapsed"])
+
+    def test_invalid_appearance_values_fall_back_safely(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "config.json"
+            path.write_text(
+                json.dumps({"theme": "neon", "capture_mode": "panorama"}),
+                encoding="utf-8",
+            )
+            config = load_config(path)
+        self.assertEqual(config["theme"], "light")
+        self.assertEqual(config["capture_mode"], "photo")
 
     def test_controls_are_saved_per_camera_and_clamped(self):
         with tempfile.TemporaryDirectory() as directory:

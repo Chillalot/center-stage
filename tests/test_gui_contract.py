@@ -43,7 +43,7 @@ class GuiContractTests(unittest.TestCase):
             'N_("Background")',
             'self._("Microphone")',
             'self._("Mute Microphone")',
-            'self._("Media Folder…")',
+            'self._("Configure…")',
         ):
             self.assertIn(token, self.source)
         self.assertNotIn("_build_calls_page", self.source)
@@ -76,6 +76,52 @@ class GuiContractTests(unittest.TestCase):
     def test_close_hides_and_tray_quit_stops_service(self):
         self.assertIn('self.connect("delete-event", self._on_delete_event)', self.source)
         self.assertIn('self._service_action("stop", self._finish_quit)', self.source)
+
+    def test_slim_capture_bar_and_collapsible_album_are_present(self):
+        for token in (
+            'MODE_ICONS = {',
+            '"four_up": "view-grid-symbolic"',
+            'self.capture_overlay.set_size_request(-1, 58)',
+            'self.gallery_revealer = Gtk.Revealer()',
+            'Gtk.Orientation.HORIZONTAL, self.filmstrip_frame.get_hadjustment()',
+            'self.capture_icon_stack.set_transition_duration(160)',
+            'style.add_class("active")',
+        ):
+            self.assertIn(token, self.source)
+
+    def test_theme_is_in_window_and_existing_tray_menu(self):
+        for token in (
+            'self.theme_button = Gtk.Button()',
+            'theme = Gtk.MenuItem.new_with_label(self._("Theme"))',
+            'N_("Light Theme")',
+            'N_("Dark Theme")',
+            'gtk-application-prefer-dark-theme',
+        ):
+            self.assertIn(token, self.source)
+        self.assertEqual(self.source.count("AyatanaAppIndicator3.Indicator.new"), 1)
+
+    def test_video_countdown_timer_and_duration_thumbnail_are_present(self):
+        for token in (
+            'self._countdown(3, self._start_recording)',
+            'self.recording_time_label = Gtk.Label(label="● 00:00")',
+            'GLib.timeout_add(250, self._recording_timer_tick)',
+            'preview = media_preview(path)',
+            'duration.get_style_context().add_class("video-duration")',
+        ):
+            self.assertIn(token, self.source)
+        self.assertNotIn("media-playback-start-symbolic", self.source)
+
+    def test_tray_configure_popup_has_separate_picture_and_video_paths(self):
+        for token in (
+            "class MediaFoldersPopup",
+            '"pictures_folder"',
+            '"videos_folder"',
+            'self._("Pictures")',
+            'self._("Videos")',
+            'self._("Choose the folder where Center Stage will save videos")',
+            "list_media_folders(self.media_library.folders)",
+        ):
+            self.assertIn(token, self.source)
 
 
 if __name__ == "__main__":

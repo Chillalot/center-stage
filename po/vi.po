@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: Center Stage 4.4.0\n"
+"Project-Id-Version: Center Stage 4.5.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-03 19:23+0700\n"
+"POT-Creation-Date: 2026-08-04 20:46+0700\n"
 "PO-Revision-Date: 2026-07-30 00:00+0700\n"
 "Last-Translator: Center Stage Local\n"
 "Language-Team: Vietnamese\n"
@@ -12,290 +12,349 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#: center_stage/gui.py:60
+#: center_stage/gui.py:70 center_stage/gui.py:665
 msgid "Photo"
 msgstr "Ảnh"
 
-#: center_stage/gui.py:60
+#: center_stage/gui.py:70 center_stage/gui.py:664
 msgid "4-up"
 msgstr "4 ảnh"
 
-#: center_stage/gui.py:60
+#: center_stage/gui.py:70 center_stage/gui.py:666
 msgid "Video"
 msgstr "Video"
 
-#: center_stage/gui.py:62
+#: center_stage/gui.py:77
 msgid "Reactions"
 msgstr "Phản ứng"
 
-#: center_stage/gui.py:63
+#: center_stage/gui.py:78
 msgid "Background"
 msgstr "Phông nền"
 
-#: center_stage/gui.py:66
+#: center_stage/gui.py:81
 msgid "Brightness"
 msgstr "Độ sáng"
 
-#: center_stage/gui.py:67
+#: center_stage/gui.py:82
 msgid "Contrast"
 msgstr "Độ tương phản"
 
-#: center_stage/gui.py:68
+#: center_stage/gui.py:83
 msgid "Saturation"
 msgstr "Độ bão hòa"
 
-#: center_stage/gui.py:69
+#: center_stage/gui.py:84
 msgid "Hue"
 msgstr "Sắc độ"
 
-#: center_stage/gui.py:72 center_stage/gui.py:303 center_stage/gui.py:376
+#: center_stage/gui.py:87 center_stage/gui.py:534 center_stage/gui.py:745
 #, fuzzy
 msgid "Turn camera on"
 msgstr "Camera đầu vào"
 
-#: center_stage/gui.py:73
+#: center_stage/gui.py:88
 msgid "Connecting camera…"
 msgstr "Đang kết nối camera…"
 
-#: center_stage/gui.py:74 center_stage/gui.py:1141
+#: center_stage/gui.py:89 center_stage/gui.py:1617
 msgid "Camera is ready"
 msgstr "Camera đã sẵn sàng"
 
-#: center_stage/gui.py:75
+#: center_stage/gui.py:90
 msgid "The camera is being used by another application."
 msgstr "Camera đang được một ứng dụng khác sử dụng."
 
-#: center_stage/gui.py:76
+#: center_stage/gui.py:91
 msgid "The selected camera is not connected."
 msgstr "Camera đã chọn chưa được kết nối."
 
-#: center_stage/gui.py:77
+#: center_stage/gui.py:92
 msgid "The camera could not be opened."
 msgstr "Không thể mở camera."
 
-#: center_stage/gui.py:78
+#: center_stage/gui.py:93
 msgid "PipeWire cannot share the selected camera."
 msgstr "PipeWire không thể chia sẻ camera đã chọn."
 
-#: center_stage/gui.py:79
+#: center_stage/gui.py:94
 msgid "The camera was disconnected."
 msgstr "Camera đã bị ngắt kết nối."
 
-#: center_stage/gui.py:80
+#: center_stage/gui.py:95
 msgid "The Center Stage virtual camera is unavailable."
 msgstr "Camera ảo Center Stage chưa sẵn sàng."
 
-#: center_stage/gui.py:81
+#: center_stage/gui.py:96
 msgid "Video is running, but PipeWire cannot see the virtual camera."
 msgstr "Video đang chạy nhưng PipeWire chưa nhận camera ảo."
 
-#: center_stage/gui.py:82
+#: center_stage/gui.py:97
 msgid "The Center Stage PipeWire camera is unavailable."
 msgstr "Camera PipeWire Center Stage chưa sẵn sàng."
 
-#: center_stage/gui.py:83
+#: center_stage/gui.py:98
 msgid "The virtual camera output could not be started."
 msgstr "Không thể khởi động đầu ra camera ảo."
 
-#: center_stage/gui.py:84
+#: center_stage/gui.py:99
 msgid "The v4l2loopback driver is not installed."
 msgstr "Driver v4l2loopback chưa được cài đặt."
 
-#: center_stage/gui.py:85
+#: center_stage/gui.py:100
 msgid "Another device is using /dev/video10."
 msgstr "Một thiết bị khác đang sử dụng /dev/video10."
 
-#: center_stage/gui.py:86
+#: center_stage/gui.py:101
 msgid "The face detection model is missing."
 msgstr "Thiếu mô hình nhận diện khuôn mặt."
 
-#: center_stage/gui.py:87
+#: center_stage/gui.py:102
 msgid "Input and output cameras cannot be the same."
 msgstr "Camera đầu vào và đầu ra không được trùng nhau."
 
-#: center_stage/gui.py:88
+#: center_stage/gui.py:103
 msgid "Center Stage is already running."
 msgstr "Center Stage đang chạy."
 
-#: center_stage/gui.py:89
+#: center_stage/gui.py:104
 msgid "The camera resolution changed unexpectedly."
 msgstr "Độ phân giải camera đã thay đổi ngoài dự kiến."
 
-#: center_stage/gui.py:90
+#: center_stage/gui.py:105
 msgid "Center Stage stopped because of an internal error."
 msgstr "Center Stage đã dừng do lỗi nội bộ."
 
-#: center_stage/gui.py:91
+#: center_stage/gui.py:106
 msgid "The Center Stage background service is not installed."
 msgstr "Dịch vụ nền Center Stage chưa được cài đặt."
 
-#: center_stage/gui.py:320
+#: center_stage/gui.py:226
+msgid "Press Enter to save this path"
+msgstr "Nhấn Enter để lưu đường dẫn này"
+
+#: center_stage/gui.py:255
+msgid "Cancel"
+msgstr "Hủy"
+
+#: center_stage/gui.py:255
+msgid "Select"
+msgstr "Chọn"
+
+#: center_stage/gui.py:554
 msgid "Turn on a camera to take photos or record video."
 msgstr "Bật camera để chụp ảnh hoặc quay video."
 
-#: center_stage/gui.py:347 center_stage/gui.py:354 center_stage/gui.py:812
-msgid "Capture"
-msgstr "Chụp"
+#: center_stage/gui.py:617
+msgid "Effects"
+msgstr "Hiệu ứng"
 
-#: center_stage/gui.py:354 center_stage/gui.py:812 center_stage/gui.py:904
-msgid "Record"
-msgstr "Quay"
+#: center_stage/gui.py:618
+msgid "Effects (coming soon)"
+msgstr "Hiệu ứng (sắp có)"
 
-#: center_stage/gui.py:380
+#: center_stage/gui.py:622 center_stage/gui.py:715
+msgid "Hide album"
+msgstr "Ẩn album"
+
+#: center_stage/gui.py:681
+msgid "Use light theme"
+msgstr "Dùng giao diện sáng"
+
+#: center_stage/gui.py:681
+msgid "Use dark theme"
+msgstr "Dùng giao diện tối"
+
+#: center_stage/gui.py:715
+msgid "Show album"
+msgstr "Hiện album"
+
+#: center_stage/gui.py:749
 msgid "Center Stage"
 msgstr "Center Stage"
 
-#: center_stage/gui.py:386
+#: center_stage/gui.py:755
 msgid "Portrait"
 msgstr "Chân dung"
 
-#: center_stage/gui.py:386
+#: center_stage/gui.py:755
 msgid "Background Blur"
 msgstr "Độ mờ nền"
 
-#: center_stage/gui.py:389
+#: center_stage/gui.py:758
 msgid "Studio Light"
 msgstr "Ánh sáng Studio"
 
-#: center_stage/gui.py:389
+#: center_stage/gui.py:758
 msgid "Virtual Light"
 msgstr "Độ sáng đèn ảo"
 
-#: center_stage/gui.py:398
+#: center_stage/gui.py:767
 msgid "Mirror Camera"
 msgstr "Lật hình camera"
 
-#: center_stage/gui.py:403
+#: center_stage/gui.py:772
 msgid "Camera"
 msgstr "Camera"
 
-#: center_stage/gui.py:407
+#: center_stage/gui.py:776
 msgid "Microphone"
 msgstr "Micrô"
 
-#: center_stage/gui.py:411
+#: center_stage/gui.py:780
 msgid "Mute Microphone"
 msgstr "Tắt tiếng micrô"
 
-#: center_stage/gui.py:415 center_stage/gui.py:490
+#: center_stage/gui.py:784 center_stage/gui.py:872
 msgid "Image Adjustments"
 msgstr "Điều chỉnh hình ảnh"
 
-#: center_stage/gui.py:418
-msgid "Media Folder…"
-msgstr "Thư mục media…"
+#: center_stage/gui.py:787
+msgid "Configure…"
+msgstr "Cấu hình…"
 
-#: center_stage/gui.py:421
+#: center_stage/gui.py:790
 msgid "Language"
 msgstr "Ngôn ngữ"
 
-#: center_stage/gui.py:433
+#: center_stage/gui.py:801
+msgid "Theme"
+msgstr "Giao diện"
+
+#: center_stage/gui.py:805
+msgid "Light Theme"
+msgstr "Giao diện sáng"
+
+#: center_stage/gui.py:805
+msgid "Dark Theme"
+msgstr "Giao diện tối"
+
+#: center_stage/gui.py:815
 msgid "Show Center Stage"
 msgstr "Hiện Center Stage"
 
-#: center_stage/gui.py:436 center_stage/gui.py:1145
+#: center_stage/gui.py:818 center_stage/gui.py:1621
 msgid "Disconnect Camera"
 msgstr "Ngắt kết nối camera"
 
-#: center_stage/gui.py:439
+#: center_stage/gui.py:821
 msgid "Quit Center Stage"
 msgstr "Thoát Center Stage"
 
-#: center_stage/gui.py:500
+#: center_stage/gui.py:882
 msgid "Reset Image Settings"
 msgstr "Đặt lại hình ảnh"
 
-#: center_stage/gui.py:545
+#: center_stage/gui.py:927
 msgid "Camera changed"
 msgstr "Đã đổi camera"
 
-#: center_stage/gui.py:545
+#: center_stage/gui.py:927
 #, python-brace-format
 msgid "Switched to {camera} because the previous camera disconnected."
 msgstr "Đã chuyển sang {camera} vì camera trước đó bị ngắt kết nối."
 
-#: center_stage/gui.py:553
+#: center_stage/gui.py:935
 msgid "Microphone disconnected"
 msgstr "Micrô đã ngắt kết nối"
 
-#: center_stage/gui.py:553 center_stage/gui.py:932
+#: center_stage/gui.py:935 center_stage/gui.py:1390
 msgid "Video recording continues without sound."
 msgstr "Video tiếp tục được quay mà không có âm thanh."
 
-#: center_stage/gui.py:582
+#: center_stage/gui.py:964
 msgid "No camera connected"
 msgstr "Chưa kết nối camera"
 
-#: center_stage/gui.py:592
+#: center_stage/gui.py:974
 msgid "Refresh Devices"
 msgstr "Làm mới thiết bị"
 
-#: center_stage/gui.py:607
+#: center_stage/gui.py:989
 msgid "No microphone connected"
 msgstr "Chưa kết nối micrô"
 
-#: center_stage/gui.py:648
+#: center_stage/gui.py:1030
 msgid "Microphone changed"
 msgstr "Đã đổi micrô"
 
-#: center_stage/gui.py:648
+#: center_stage/gui.py:1030
 msgid "The new microphone will be used for the next video."
 msgstr "Micrô mới sẽ được dùng cho video tiếp theo."
 
-#: center_stage/gui.py:798
-msgid "Choose Media Folder"
-msgstr "Chọn thư mục media"
+#: center_stage/gui.py:1200
+msgid "Configure Media"
+msgstr "Cấu hình thư mục media"
 
-#: center_stage/gui.py:799
-msgid "Cancel"
-msgstr "Hủy"
+#: center_stage/gui.py:1203
+msgid "Pictures"
+msgstr "Ảnh"
 
-#: center_stage/gui.py:799
-msgid "Select"
-msgstr "Chọn"
+#: center_stage/gui.py:1204
+msgid "Choose the folder where Center Stage will save pictures"
+msgstr "Chọn thư mục Center Stage sẽ dùng để lưu ảnh"
 
-#: center_stage/gui.py:893
-msgid "Stop"
-msgstr "Dừng"
+#: center_stage/gui.py:1209
+msgid "Videos"
+msgstr "Video"
 
-#: center_stage/gui.py:913
+#: center_stage/gui.py:1210
+msgid "Choose the folder where Center Stage will save videos"
+msgstr "Chọn thư mục Center Stage sẽ dùng để lưu video"
+
+#: center_stage/gui.py:1358
 msgid "Video recovered"
 msgstr "Đã khôi phục video"
 
-#: center_stage/gui.py:913
+#: center_stage/gui.py:1358
 msgid ""
 "The selected folder was unavailable; the video was kept in the recovery "
 "folder."
 msgstr ""
 "Thư mục đã chọn không khả dụng; video được giữ trong thư mục khôi phục."
 
-#: center_stage/gui.py:932
+#: center_stage/gui.py:1390
 msgid "Microphone unavailable"
 msgstr "Micrô không khả dụng"
 
-#: center_stage/gui.py:943
+#: center_stage/gui.py:1407
 msgid "Media could not be saved"
 msgstr "Không thể lưu media"
 
-#: center_stage/gui.py:953
+#: center_stage/gui.py:1417
 msgid "Your photos and videos will appear here."
 msgstr "Ảnh và video của bạn sẽ xuất hiện ở đây."
 
-#: center_stage/gui.py:974
+#: center_stage/gui.py:1450
 msgid "Open Folder"
 msgstr "Mở thư mục"
 
-#: center_stage/gui.py:976 center_stage/gui.py:989
+#: center_stage/gui.py:1452 center_stage/gui.py:1465
 msgid "Delete"
 msgstr "Xóa"
 
-#: center_stage/gui.py:988
+#: center_stage/gui.py:1464
 msgid "Delete this media file?"
 msgstr "Xóa tệp media này?"
 
-#: center_stage/gui.py:1145
+#: center_stage/gui.py:1621
 msgid "Connect Camera"
 msgstr "Kết nối camera"
+
+#~ msgid "Media Folder…"
+#~ msgstr "Thư mục media…"
+
+#~ msgid "Choose Media Folder"
+#~ msgstr "Chọn thư mục media"
+
+#~ msgid "Capture"
+#~ msgstr "Chụp"
+
+#~ msgid "Record"
+#~ msgstr "Quay"
+
+#~ msgid "Stop"
+#~ msgstr "Dừng"
 
 #~ msgid "Enabled"
 #~ msgstr "Bật"
@@ -329,9 +388,6 @@ msgstr "Kết nối camera"
 
 #~ msgid "Mirror Output"
 #~ msgstr "Lật hình đầu ra"
-
-#~ msgid "Studio is coming soon"
-#~ msgstr "Studio sắp ra mắt"
 
 #~ msgid ""
 #~ "Photo, 4-up, video, and the filmstrip will use the same camera stage."

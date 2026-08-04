@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import errno
+import logging
 import os
+import shutil
 import tempfile
 from dataclasses import dataclass
 from datetime import datetime
@@ -19,6 +22,7 @@ from gi.repository import Gst  # noqa: E402
 
 
 MEDIA_SUFFIXES = {".jpg", ".jpeg", ".mp4"}
+LOGGER = logging.getLogger("center-stage.media")
 
 
 def unique_media_path(folder: Path, prefix: str, suffix: str, now: datetime | None = None) -> Path:
@@ -60,18 +64,90 @@ def list_media(folder: Path, limit: int = 12) -> list[Path]:
     return sorted(media, key=lambda item: item.stat().st_mtime, reverse=True)[:limit]
 
 
-def thumbnail(path: Path, size: tuple[int, int] = (112, 64)) -> np.ndarray | None:
+def list_media_folders(folders: tuple[Path, ...], limit: int = 12) -> list[Path]:
+    media: dict[Path, Path] = {}
+    for folder in folders:
+        for path in list_media(folder, limit=limit):
+            media[path.resolve()] = path
+    return sorted(media.values(), key=lambda item: item.stat().st_mtime, reverse=True)[:limit]
+
+
+@dataclass(frozen=True)
+class MediaPreview:
+    frame: np.ndarray | None
+    duration_seconds: int | None = None
+
+
+def media_preview(path: Path, size: tuple[int, int] = (112, 64)) -> MediaPreview:
     if path.suffix.lower() == ".mp4":
         capture = cv2.VideoCapture(str(path))
+        fps = float(capture.get(cv2.CAP_PROP_FPS) or 0)
+        frame_count = float(capture.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
+        duration = int(round(frame_count / fps)) if fps > 0 and frame_count > 0 else None
+        seek_ms = min(2000.0, max(350.0, (duration or 0) * 100.0))
+        capture.set(cv2.CAP_PROP_POS_MSEC, seek_ms)
         ok, frame = capture.read()
+        if not ok:
+            capture.set(cv2.CAP_PROP_POS_FRAMES, 0)
+            ok, frame = capture.read()
         capture.release()
         if not ok:
-            return None
+            frame = np.full((size[1], size[0], 3), 32, dtype=np.uint8)
     else:
         frame = cv2.imread(str(path))
         if frame is None:
-            return None
-    return cv2.resize(frame, size, interpolation=cv2.INTER_AREA)
+            return MediaPreview(None)
+        duration = None
+    return MediaPreview(
+        cv2.resize(frame, size, interpolation=cv2.INTER_AREA),
+        duration,
+    )
+
+
+def thumbnail(path: Path, size: tuple[int, int] = (112, 64)) -> np.ndarray | None:
+    return media_preview(path, size).frame
+
+
+def format_duration(seconds: int) -> str:
+    seconds = max(0, int(seconds))
+    hours, remainder = divmod(seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    return f"{hours}:{minutes:02d}:{seconds:02d}" if hours else f"{minutes}:{seconds:02d}"
+
+
+def recording_encoder_candidates() -> list[tuple[str, str]]:
+    """Return quality-oriented encoders in preferred runtime order."""
+    Gst.init(None)
+    candidates: list[tuple[str, str]] = []
+    if Gst.ElementFactory.find("vaapih264enc") is not None:
+        candidates.append(
+            (
+                "vaapi",
+                "videoconvert n-threads=2 ! video/x-raw,format=NV12 ! "
+                "vaapih264enc tune=low-power rate-control=cqp init-qp=24 "
+                "keyframe-period=60 cabac=true dct8x8=true",
+            )
+        )
+    if Gst.ElementFactory.find("x264enc") is not None:
+        candidates.append(
+            (
+                "x264",
+                "videoconvert n-threads=2 ! video/x-raw,format=I420 ! "
+                "x264enc speed-preset=veryfast bitrate=16000 key-int-max=60 "
+                "bframes=2 ref=2 cabac=true noise-reduction=200 threads=0",
+            )
+        )
+    if Gst.ElementFactory.find("openh264enc") is not None:
+        candidates.append(
+            (
+                "openh264",
+                "videoconvert n-threads=2 ! video/x-raw,format=I420 ! "
+                "openh264enc complexity=low bitrate=16000000 max-bitrate=24000000 "
+                "rate-control=bitrate enable-denoise=true enable-frame-skip=false "
+                "gop-size=60 multi-thread=0 usage-type=camera",
+            )
+        )
+    return candidates
 
 
 @dataclass
@@ -80,10 +156,11 @@ class VideoRecorder:
 
     preview_socket: Path
     recovery_folder: Path
-    on_message: Callable[[Gst.Message], None]
+    on_message: Callable[..., None]
     pipeline: Gst.Pipeline | None = None
     destination: Path | None = None
     recovery_path: Path | None = None
+    encoder_name: str = ""
 
     def start(self, destination: Path, microphone_id: str | None, muted: bool) -> None:
         if self.pipeline is not None:
@@ -99,8 +176,8 @@ class VideoRecorder:
         video_source = (
             f'shmsrc socket-path="{escaped_socket}" is-live=true do-timestamp=true ! '
             'video/x-raw,format=YUY2,width=1920,height=1080,framerate=30/1 ! '
-            'queue ! videoconvert ! x264enc tune=zerolatency speed-preset=veryfast '
-            'bitrate=8000 key-int-max=60 ! h264parse ! queue ! '
+            'queue leaky=downstream max-size-buffers=4 max-size-bytes=0 max-size-time=0 ! '
+            'videorate ! video/x-raw,framerate=30/1 ! '
         )
         microphone = ""
         if microphone_id:
@@ -113,24 +190,52 @@ class VideoRecorder:
         audio = ""
         if not muted and microphone_id:
             audio = microphone
-        if audio:
+        mux = (
+            f'mp4mux name=mux faststart=true presentation-time=true interleave-time=500000000 '
+            f'! filesink location="{escaped_file}" '
+        )
+        failures: list[str] = []
+        candidates = recording_encoder_candidates()
+        if not candidates:
+            self.recovery_path.unlink(missing_ok=True)
+            self.recovery_path = None
+            self.destination = None
+            raise RuntimeError("no H.264 encoder is installed")
+        for encoder_name, encoder in candidates:
             description = (
-                f'mp4mux name=mux faststart=true ! filesink location="{escaped_file}" '
-                f'{video_source}mux. {audio}'
+                f'{mux}{video_source}{encoder} ! h264parse config-interval=-1 ! '
+                f'queue max-size-buffers=8 max-size-bytes=0 max-size-time=0 ! mux. {audio}'
             )
-        else:
-            description = (
-                f'{video_source}mp4mux faststart=true ! filesink location="{escaped_file}"'
-            )
-        pipeline = Gst.parse_launch(description)
-        bus = pipeline.get_bus()
-        bus.add_signal_watch()
-        bus.connect("message", self.on_message)
-        if pipeline.set_state(Gst.State.PLAYING) == Gst.StateChangeReturn.FAILURE:
-            bus.remove_signal_watch()
-            pipeline.set_state(Gst.State.NULL)
-            raise RuntimeError("recording pipeline failed")
-        self.pipeline = pipeline
+            pipeline: Gst.Pipeline | None = None
+            bus: Gst.Bus | None = None
+            try:
+                pipeline = Gst.parse_launch(description)
+                bus = pipeline.get_bus()
+                state_result = pipeline.set_state(Gst.State.PLAYING)
+                settled, _current, _pending = pipeline.get_state(750 * Gst.MSECOND)
+                error_message = bus.timed_pop_filtered(0, Gst.MessageType.ERROR)
+                if state_result == Gst.StateChangeReturn.FAILURE or settled == Gst.StateChangeReturn.FAILURE:
+                    raise RuntimeError("encoder failed to enter PLAYING state")
+                if error_message is not None:
+                    error, _debug = error_message.parse_error()
+                    raise RuntimeError(error.message)
+                bus.add_signal_watch()
+                bus.connect("message", self.on_message)
+                self.pipeline = pipeline
+                self.encoder_name = encoder_name
+                LOGGER.info("Recording encoder selected name=%s", encoder_name)
+                return
+            except Exception as error:
+                failures.append(f"{encoder_name}: {error}")
+                if pipeline is not None:
+                    pipeline.set_state(Gst.State.NULL)
+                LOGGER.warning("Recording encoder unavailable name=%s error=%s", encoder_name, error)
+        self.encoder_name = ""
+        if self.recovery_path is not None:
+            self.recovery_path.unlink(missing_ok=True)
+        self.recovery_path = None
+        self.destination = None
+        raise RuntimeError("recording pipeline failed (" + "; ".join(failures) + ")")
 
     def set_muted(self, muted: bool) -> None:
         if self.pipeline is None:
@@ -149,6 +254,7 @@ class VideoRecorder:
         bus.remove_signal_watch()
         pipeline.set_state(Gst.State.NULL)
         self.pipeline = None
+        self.encoder_name = ""
         recovery = self.recovery_path
         destination = self.destination
         self.recovery_path = None
@@ -161,5 +267,18 @@ class VideoRecorder:
             destination.parent.mkdir(parents=True, exist_ok=True)
             os.replace(recovery, destination)
             return destination
+        except OSError as error:
+            if error.errno != errno.EXDEV:
+                return recovery
+        temporary = destination.with_suffix(destination.suffix + ".part")
+        try:
+            with recovery.open("rb") as source, temporary.open("wb") as target:
+                shutil.copyfileobj(source, target, length=1024 * 1024)
+                target.flush()
+                os.fsync(target.fileno())
+            os.replace(temporary, destination)
+            recovery.unlink()
+            return destination
         except OSError:
+            temporary.unlink(missing_ok=True)
             return recovery

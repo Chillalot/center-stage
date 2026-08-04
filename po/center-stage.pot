@@ -1,14 +1,14 @@
 # SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# Copyright (C) YEAR Center Stage contributors
 # This file is distributed under the same license as the Center Stage package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: Center Stage 4.4.0\n"
+"Project-Id-Version: Center Stage 4.5.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-03 19:23+0700\n"
+"POT-Creation-Date: 2026-08-04 20:46+0700\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,285 +17,329 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: center_stage/gui.py:60
+#: center_stage/gui.py:70 center_stage/gui.py:665
 msgid "Photo"
 msgstr ""
 
-#: center_stage/gui.py:60
+#: center_stage/gui.py:70 center_stage/gui.py:664
 msgid "4-up"
 msgstr ""
 
-#: center_stage/gui.py:60
+#: center_stage/gui.py:70 center_stage/gui.py:666
 msgid "Video"
 msgstr ""
 
-#: center_stage/gui.py:62
+#: center_stage/gui.py:77
 msgid "Reactions"
 msgstr ""
 
-#: center_stage/gui.py:63
+#: center_stage/gui.py:78
 msgid "Background"
 msgstr ""
 
-#: center_stage/gui.py:66
+#: center_stage/gui.py:81
 msgid "Brightness"
 msgstr ""
 
-#: center_stage/gui.py:67
+#: center_stage/gui.py:82
 msgid "Contrast"
 msgstr ""
 
-#: center_stage/gui.py:68
+#: center_stage/gui.py:83
 msgid "Saturation"
 msgstr ""
 
-#: center_stage/gui.py:69
+#: center_stage/gui.py:84
 msgid "Hue"
 msgstr ""
 
-#: center_stage/gui.py:72 center_stage/gui.py:303 center_stage/gui.py:376
+#: center_stage/gui.py:87 center_stage/gui.py:534 center_stage/gui.py:745
 msgid "Turn camera on"
 msgstr ""
 
-#: center_stage/gui.py:73
+#: center_stage/gui.py:88
 msgid "Connecting camera…"
 msgstr ""
 
-#: center_stage/gui.py:74 center_stage/gui.py:1141
+#: center_stage/gui.py:89 center_stage/gui.py:1617
 msgid "Camera is ready"
 msgstr ""
 
-#: center_stage/gui.py:75
+#: center_stage/gui.py:90
 msgid "The camera is being used by another application."
 msgstr ""
 
-#: center_stage/gui.py:76
+#: center_stage/gui.py:91
 msgid "The selected camera is not connected."
 msgstr ""
 
-#: center_stage/gui.py:77
+#: center_stage/gui.py:92
 msgid "The camera could not be opened."
 msgstr ""
 
-#: center_stage/gui.py:78
+#: center_stage/gui.py:93
 msgid "PipeWire cannot share the selected camera."
 msgstr ""
 
-#: center_stage/gui.py:79
+#: center_stage/gui.py:94
 msgid "The camera was disconnected."
 msgstr ""
 
-#: center_stage/gui.py:80
+#: center_stage/gui.py:95
 msgid "The Center Stage virtual camera is unavailable."
 msgstr ""
 
-#: center_stage/gui.py:81
+#: center_stage/gui.py:96
 msgid "Video is running, but PipeWire cannot see the virtual camera."
 msgstr ""
 
-#: center_stage/gui.py:82
+#: center_stage/gui.py:97
 msgid "The Center Stage PipeWire camera is unavailable."
 msgstr ""
 
-#: center_stage/gui.py:83
+#: center_stage/gui.py:98
 msgid "The virtual camera output could not be started."
 msgstr ""
 
-#: center_stage/gui.py:84
+#: center_stage/gui.py:99
 msgid "The v4l2loopback driver is not installed."
 msgstr ""
 
-#: center_stage/gui.py:85
+#: center_stage/gui.py:100
 msgid "Another device is using /dev/video10."
 msgstr ""
 
-#: center_stage/gui.py:86
+#: center_stage/gui.py:101
 msgid "The face detection model is missing."
 msgstr ""
 
-#: center_stage/gui.py:87
+#: center_stage/gui.py:102
 msgid "Input and output cameras cannot be the same."
 msgstr ""
 
-#: center_stage/gui.py:88
+#: center_stage/gui.py:103
 msgid "Center Stage is already running."
 msgstr ""
 
-#: center_stage/gui.py:89
+#: center_stage/gui.py:104
 msgid "The camera resolution changed unexpectedly."
 msgstr ""
 
-#: center_stage/gui.py:90
+#: center_stage/gui.py:105
 msgid "Center Stage stopped because of an internal error."
 msgstr ""
 
-#: center_stage/gui.py:91
+#: center_stage/gui.py:106
 msgid "The Center Stage background service is not installed."
 msgstr ""
 
-#: center_stage/gui.py:320
+#: center_stage/gui.py:226
+msgid "Press Enter to save this path"
+msgstr ""
+
+#: center_stage/gui.py:255
+msgid "Cancel"
+msgstr ""
+
+#: center_stage/gui.py:255
+msgid "Select"
+msgstr ""
+
+#: center_stage/gui.py:554
 msgid "Turn on a camera to take photos or record video."
 msgstr ""
 
-#: center_stage/gui.py:347 center_stage/gui.py:354 center_stage/gui.py:812
-msgid "Capture"
+#: center_stage/gui.py:617
+msgid "Effects"
 msgstr ""
 
-#: center_stage/gui.py:354 center_stage/gui.py:812 center_stage/gui.py:904
-msgid "Record"
+#: center_stage/gui.py:618
+msgid "Effects (coming soon)"
 msgstr ""
 
-#: center_stage/gui.py:380
+#: center_stage/gui.py:622 center_stage/gui.py:715
+msgid "Hide album"
+msgstr ""
+
+#: center_stage/gui.py:681
+msgid "Use light theme"
+msgstr ""
+
+#: center_stage/gui.py:681
+msgid "Use dark theme"
+msgstr ""
+
+#: center_stage/gui.py:715
+msgid "Show album"
+msgstr ""
+
+#: center_stage/gui.py:749
 msgid "Center Stage"
 msgstr ""
 
-#: center_stage/gui.py:386
+#: center_stage/gui.py:755
 msgid "Portrait"
 msgstr ""
 
-#: center_stage/gui.py:386
+#: center_stage/gui.py:755
 msgid "Background Blur"
 msgstr ""
 
-#: center_stage/gui.py:389
+#: center_stage/gui.py:758
 msgid "Studio Light"
 msgstr ""
 
-#: center_stage/gui.py:389
+#: center_stage/gui.py:758
 msgid "Virtual Light"
 msgstr ""
 
-#: center_stage/gui.py:398
+#: center_stage/gui.py:767
 msgid "Mirror Camera"
 msgstr ""
 
-#: center_stage/gui.py:403
+#: center_stage/gui.py:772
 msgid "Camera"
 msgstr ""
 
-#: center_stage/gui.py:407
+#: center_stage/gui.py:776
 msgid "Microphone"
 msgstr ""
 
-#: center_stage/gui.py:411
+#: center_stage/gui.py:780
 msgid "Mute Microphone"
 msgstr ""
 
-#: center_stage/gui.py:415 center_stage/gui.py:490
+#: center_stage/gui.py:784 center_stage/gui.py:872
 msgid "Image Adjustments"
 msgstr ""
 
-#: center_stage/gui.py:418
-msgid "Media Folder…"
+#: center_stage/gui.py:787
+msgid "Configure…"
 msgstr ""
 
-#: center_stage/gui.py:421
+#: center_stage/gui.py:790
 msgid "Language"
 msgstr ""
 
-#: center_stage/gui.py:433
+#: center_stage/gui.py:801
+msgid "Theme"
+msgstr ""
+
+#: center_stage/gui.py:805
+msgid "Light Theme"
+msgstr ""
+
+#: center_stage/gui.py:805
+msgid "Dark Theme"
+msgstr ""
+
+#: center_stage/gui.py:815
 msgid "Show Center Stage"
 msgstr ""
 
-#: center_stage/gui.py:436 center_stage/gui.py:1145
+#: center_stage/gui.py:818 center_stage/gui.py:1621
 msgid "Disconnect Camera"
 msgstr ""
 
-#: center_stage/gui.py:439
+#: center_stage/gui.py:821
 msgid "Quit Center Stage"
 msgstr ""
 
-#: center_stage/gui.py:500
+#: center_stage/gui.py:882
 msgid "Reset Image Settings"
 msgstr ""
 
-#: center_stage/gui.py:545
+#: center_stage/gui.py:927
 msgid "Camera changed"
 msgstr ""
 
-#: center_stage/gui.py:545
+#: center_stage/gui.py:927
 #, python-brace-format
 msgid "Switched to {camera} because the previous camera disconnected."
 msgstr ""
 
-#: center_stage/gui.py:553
+#: center_stage/gui.py:935
 msgid "Microphone disconnected"
 msgstr ""
 
-#: center_stage/gui.py:553 center_stage/gui.py:932
+#: center_stage/gui.py:935 center_stage/gui.py:1390
 msgid "Video recording continues without sound."
 msgstr ""
 
-#: center_stage/gui.py:582
+#: center_stage/gui.py:964
 msgid "No camera connected"
 msgstr ""
 
-#: center_stage/gui.py:592
+#: center_stage/gui.py:974
 msgid "Refresh Devices"
 msgstr ""
 
-#: center_stage/gui.py:607
+#: center_stage/gui.py:989
 msgid "No microphone connected"
 msgstr ""
 
-#: center_stage/gui.py:648
+#: center_stage/gui.py:1030
 msgid "Microphone changed"
 msgstr ""
 
-#: center_stage/gui.py:648
+#: center_stage/gui.py:1030
 msgid "The new microphone will be used for the next video."
 msgstr ""
 
-#: center_stage/gui.py:798
-msgid "Choose Media Folder"
+#: center_stage/gui.py:1200
+msgid "Configure Media"
 msgstr ""
 
-#: center_stage/gui.py:799
-msgid "Cancel"
+#: center_stage/gui.py:1203
+msgid "Pictures"
 msgstr ""
 
-#: center_stage/gui.py:799
-msgid "Select"
+#: center_stage/gui.py:1204
+msgid "Choose the folder where Center Stage will save pictures"
 msgstr ""
 
-#: center_stage/gui.py:893
-msgid "Stop"
+#: center_stage/gui.py:1209
+msgid "Videos"
 msgstr ""
 
-#: center_stage/gui.py:913
+#: center_stage/gui.py:1210
+msgid "Choose the folder where Center Stage will save videos"
+msgstr ""
+
+#: center_stage/gui.py:1358
 msgid "Video recovered"
 msgstr ""
 
-#: center_stage/gui.py:913
+#: center_stage/gui.py:1358
 msgid ""
 "The selected folder was unavailable; the video was kept in the recovery "
 "folder."
 msgstr ""
 
-#: center_stage/gui.py:932
+#: center_stage/gui.py:1390
 msgid "Microphone unavailable"
 msgstr ""
 
-#: center_stage/gui.py:943
+#: center_stage/gui.py:1407
 msgid "Media could not be saved"
 msgstr ""
 
-#: center_stage/gui.py:953
+#: center_stage/gui.py:1417
 msgid "Your photos and videos will appear here."
 msgstr ""
 
-#: center_stage/gui.py:974
+#: center_stage/gui.py:1450
 msgid "Open Folder"
 msgstr ""
 
-#: center_stage/gui.py:976 center_stage/gui.py:989
+#: center_stage/gui.py:1452 center_stage/gui.py:1465
 msgid "Delete"
 msgstr ""
 
-#: center_stage/gui.py:988
+#: center_stage/gui.py:1464
 msgid "Delete this media file?"
 msgstr ""
 
-#: center_stage/gui.py:1145
+#: center_stage/gui.py:1621
 msgid "Connect Camera"
 msgstr ""

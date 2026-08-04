@@ -1,4 +1,4 @@
-# Center Stage V4.4.0
+# Center Stage V4.5.1
 
 Center Stage turns a physical webcam into a face-tracking virtual camera on
 Linux. The V4 desktop app provides a lightweight GTK3 interface in English and
@@ -9,11 +9,19 @@ service.
 
 - Open **Center Stage** from the application menu. The preferred camera connects
   automatically and the virtual camera appears as **Center Stage** in video apps.
-- The minimal Photo Booth window captures photos, 2x2 four-up collages, and
-  H.264/AAC MP4 video with a selectable microphone.
+- The slim Photo Booth toolbar switches between photos, 2x2 four-up collages,
+  and H.264/AAC MP4 video with compact rounded controls. The media strip sits
+  above the toolbar, can be collapsed, and has a dedicated horizontal scrollbar.
+- Video recording uses a three-second countdown, shows elapsed time while live,
+  and adds a representative frame plus duration to each album thumbnail. The
+  recorder prefers hardware H.264 with bounded queues and falls back to tuned
+  software encoders when hardware acceleration is unavailable.
+- Choose the bright white or dark theme from the window header or from the
+  existing status-icon menu; no additional status icon is created.
 - Select the camera and turn it on or off from the window. Center Stage,
-  microphone, mute, mirror, image controls, language, and the media folder live
-  in the Cinnamon status menu.
+  microphone, mute, mirror, image controls, language, and media configuration
+  live in the Cinnamon status menu. **Configure…** provides separate editable
+  destinations and folder pickers for pictures and videos.
 - Portrait applies an adjustable person-aware background blur. Studio Light
   adapts a face-aware virtual key light to the camera and room illumination,
   protects skin color and highlights, and subtly separates the background.
@@ -29,8 +37,9 @@ service.
 - The engine does not start automatically after login.
 
 English is used on first launch. Vietnamese can be selected from the status
-menu without restarting the window or camera. Media defaults to
-`~/Pictures/Center Stage` and can be changed from the same menu.
+menu without restarting the window or camera. Pictures default to `~/Pictures`
+and videos default to `~/Videos`; existing legacy media remains visible in the
+album after upgrading.
 
 The on-screen preview is transported over a private shared-memory socket. It
 does not open `/dev/video10`, leaving the V4L2 webcam available to Chrome,
@@ -52,13 +61,13 @@ chmod +x packaging/build_deb.sh
 The result is:
 
 ```text
-dist/center-stage_4.4.0_amd64.deb
+dist/center-stage_4.5.1_amd64.deb
 ```
 
 Install it with:
 
 ```bash
-sudo apt install ./dist/center-stage_4.4.0_amd64.deb
+sudo apt install ./dist/center-stage_4.5.1_amd64.deb
 ```
 
 The package expects a working `v4l2loopback` kernel module. It configures the
@@ -123,7 +132,8 @@ systemd user unit. The CLI can be used before installing the package.
 - Virtual camera: `/dev/video10`
 - User service: `center-stage-engine.service`
 - GUI log: `~/.local/state/center-stage/gui.log`
-- Default media: `~/Pictures/Center Stage`
+- Default pictures: `~/Pictures`
+- Default videos: `~/Videos`
 
 The application stores image-control values separately for each stable camera
 ID. Camera product names remain unchanged; only the integrated/USB description

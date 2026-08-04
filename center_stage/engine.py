@@ -35,6 +35,7 @@ OUTPUT_HEIGHT = 1080
 OUTPUT_FPS = 30
 OUTPUT_FORMAT = "YUY2"
 OUTPUT_DEVICE = "/dev/video10"
+PREVIEW_SHM_SIZE = 64 * 1024 * 1024
 DETECTION_WIDTH = 640
 DETECTION_INTERVAL = 4
 SEGMENTATION_INTERVAL = 4
@@ -628,7 +629,9 @@ class V4L2VirtualOutput:
         preview_output.set_property("wait-for-connection", False)
         preview_output.set_property("sync", False)
         preview_output.set_property("async", False)
-        preview_output.set_property("shm-size", 32 * 1024 * 1024)
+        # Keep enough raw 1080p YUY2 frames for the GTK preview and recorder to
+        # read independently without one slow consumer wrapping the ring buffer.
+        preview_output.set_property("shm-size", PREVIEW_SHM_SIZE)
 
         for element in elements:
             pipeline.add(element)
