@@ -2,7 +2,7 @@
 set -euo pipefail
 
 PROJECT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
-PACKAGE_VERSION=4.4.0
+PACKAGE_VERSION=4.5.1
 PACKAGE_ARCH=amd64
 PACKAGE_NAME=center-stage
 OUTPUT_DIR="$PROJECT_DIR/dist"

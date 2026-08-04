@@ -3,6 +3,7 @@ import unittest
 from center_stage.engine import (
     InputCaps,
     OUTPUT_FPS,
+    PREVIEW_SHM_SIZE,
     output_timestamps,
     select_input_caps,
 )
@@ -36,6 +37,10 @@ class EngineCapsTests(unittest.TestCase):
         self.assertEqual(second_pts, duration)
         self.assertEqual(second_duration, duration)
         self.assertAlmostEqual(duration / 1_000_000_000, 1 / OUTPUT_FPS, places=8)
+
+    def test_shared_preview_ring_holds_multiple_raw_frames(self):
+        raw_frame_bytes = 1920 * 1080 * 2
+        self.assertGreaterEqual(PREVIEW_SHM_SIZE // raw_frame_bytes, 15)
 
 
 if __name__ == "__main__":

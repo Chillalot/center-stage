@@ -35,11 +35,13 @@ from .config import (
     CONTROL_NAMES,
     camera_control_values,
     load_config,
-    media_folder,
+    media_folders,
+    pictures_folder,
     preview_socket_path,
     read_status,
     save_config,
     set_camera_control_value,
+    videos_folder,
 )
 from .devices import (
     CameraDevice,
@@ -52,12 +54,25 @@ from .devices import (
     set_normalized_control,
 )
 from .i18n import translator
-from .media import VideoRecorder, four_up, list_media, save_jpeg, thumbnail, unique_media_path
+from .media import (
+    VideoRecorder,
+    format_duration,
+    four_up,
+    list_media_folders,
+    media_preview,
+    save_jpeg,
+    unique_media_path,
+)
 
 
 SERVICE_NAME = "center-stage-engine.service"
 N_ = lambda message: message
 CAPTURE_MODES = (("photo", N_("Photo")), ("four_up", N_("4-up")), ("video", N_("Video")))
+MODE_ICONS = {
+    "four_up": "view-grid-symbolic",
+    "photo": "camera-photo-symbolic",
+    "video": "camera-video-symbolic",
+}
 PREVIEW_FEATURES = (
     ("reactions", N_("Reactions")),
     ("background", N_("Background")),
@@ -173,6 +188,109 @@ class TraySliderPopup(Gtk.Window):
         return False
 
 
+class MediaFoldersPopup(Gtk.Window):
+    """Tray-adjacent Pictures/Videos destination editor."""
+
+    def __init__(self, owner: Gtk.Window, title: str, on_change: Any):
+        super().__init__(type=Gtk.WindowType.TOPLEVEL)
+        self.set_title(title)
+        self.set_transient_for(owner)
+        self.set_decorated(False)
+        self.set_resizable(False)
+        self.set_keep_above(True)
+        self.set_skip_taskbar_hint(True)
+        self.set_skip_pager_hint(True)
+        self.set_type_hint(Gdk.WindowTypeHint.POPUP_MENU)
+        self.set_size_request(480, -1)
+        self.connect("focus-out-event", lambda *_args: self.hide())
+        self.connect("key-press-event", self._on_key_press)
+        self.on_change = on_change
+        self._ = owner._ if hasattr(owner, "_") else (lambda message: message)
+        self.get_style_context().add_class(
+            "theme-dark" if getattr(owner, "config", {}).get("theme") == "dark" else "theme-light"
+        )
+        self.entries: dict[str, Gtk.Entry] = {}
+
+        self.body = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        self.body.set_border_width(14)
+        self.body.get_style_context().add_class("tray-control-popup")
+        heading = Gtk.Label(label=title, xalign=0)
+        heading.get_style_context().add_class("tray-control-title")
+        self.body.pack_start(heading, False, False, 0)
+        self.add(self.body)
+
+    def add_folder_row(self, key: str, label: str, chooser_title: str, folder: Path) -> None:
+        section = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+        section.pack_start(Gtk.Label(label=f"{label}:", xalign=0), False, False, 0)
+        row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        entry = Gtk.Entry()
+        entry.set_hexpand(True)
+        entry.get_style_context().add_class("media-folder-entry")
+        entry.set_text(str(folder))
+        entry.set_tooltip_text(self._("Press Enter to save this path"))
+        entry.connect("activate", self._commit_entry, key)
+        entry.connect("focus-out-event", self._commit_entry_on_focus, key)
+        self.entries[key] = entry
+        row.pack_start(entry, True, True, 0)
+        choose = Gtk.Button()
+        choose.get_style_context().add_class("media-folder-choose")
+        choose.set_image(Gtk.Image.new_from_icon_name("folder-symbolic", Gtk.IconSize.BUTTON))
+        choose.set_tooltip_text(chooser_title)
+        choose.connect("clicked", self._choose_folder, key, chooser_title)
+        row.pack_end(choose, False, False, 0)
+        section.pack_start(row, False, False, 0)
+        self.body.pack_start(section, False, False, 0)
+
+    def _commit_entry(self, entry: Gtk.Entry, key: str) -> None:
+        value = entry.get_text().strip()
+        if value:
+            self.on_change(key, Path(value).expanduser())
+
+    def _commit_entry_on_focus(self, entry: Gtk.Entry, _event: Any, key: str) -> bool:
+        self._commit_entry(entry, key)
+        return False
+
+    def _choose_folder(self, _button: Gtk.Button, key: str, chooser_title: str) -> None:
+        chooser = Gtk.FileChooserDialog(
+            title=chooser_title,
+            transient_for=self,
+            action=Gtk.FileChooserAction.SELECT_FOLDER,
+        )
+        chooser.add_buttons(
+            self._("Cancel"), Gtk.ResponseType.CANCEL, self._("Select"), Gtk.ResponseType.OK
+        )
+        current = Path(self.entries[key].get_text()).expanduser()
+        if current.is_dir():
+            chooser.set_current_folder(str(current))
+        if chooser.run() == Gtk.ResponseType.OK:
+            selected = chooser.get_filename()
+            if selected:
+                self.entries[key].set_text(selected)
+                self.on_change(key, Path(selected))
+        chooser.destroy()
+        self.present_at_pointer()
+
+    def present_at_pointer(self) -> None:
+        self.show_all()
+        self.realize()
+        display = Gdk.Display.get_default()
+        pointer = display.get_default_seat().get_pointer() if display else None
+        _screen, pointer_x, pointer_y = pointer.get_position() if pointer else (None, 0, 0)
+        width, height = self.get_preferred_size()[1].width, self.get_preferred_size()[1].height
+        monitor = display.get_monitor_at_point(pointer_x, pointer_y) if display else None
+        geometry = monitor.get_workarea() if monitor else Gdk.Rectangle(x=0, y=0, width=1920, height=1080)
+        x = min(max(pointer_x - width - 12, geometry.x + 8), geometry.x + geometry.width - width - 8)
+        y = min(max(pointer_y + 8, geometry.y + 8), geometry.y + geometry.height - height - 8)
+        self.move(x, y)
+        self.present()
+
+    def _on_key_press(self, _window: Gtk.Window, event: Any) -> bool:
+        if event.keyval == Gdk.KEY_Escape:
+            self.hide()
+            return True
+        return False
+
+
 class MediaLibrary:
     """Storage facade used by the Photo Booth and filmstrip."""
 
@@ -180,17 +298,29 @@ class MediaLibrary:
         self.config = config
 
     @property
+    def pictures_folder(self) -> Path:
+        return pictures_folder(self.config)
+
+    @property
+    def videos_folder(self) -> Path:
+        return videos_folder(self.config)
+
+    @property
+    def folders(self) -> tuple[Path, ...]:
+        return media_folders(self.config)
+
+    @property
     def folder(self) -> Path:
-        return media_folder(self.config)
+        return self.pictures_folder
 
     def photo_path(self) -> Path:
-        return unique_media_path(self.folder, "Photo", ".jpg")
+        return unique_media_path(self.pictures_folder, "Photo", ".jpg")
 
     def four_up_path(self) -> Path:
-        return unique_media_path(self.folder, "FourUp", ".jpg")
+        return unique_media_path(self.pictures_folder, "FourUp", ".jpg")
 
     def video_path(self) -> Path:
-        return unique_media_path(self.folder, "Video", ".mp4")
+        return unique_media_path(self.videos_folder, "Video", ".mp4")
 
 
 class PhotoBoothWindow(Gtk.ApplicationWindow):
@@ -221,6 +351,7 @@ class PhotoBoothWindow(Gtk.ApplicationWindow):
         self.effect_adjust_items: dict[str, Gtk.MenuItem] = {}
         self.control_popup: TraySliderPopup | None = None
         self.control_popup_kind = ""
+        self.configure_popup: MediaFoldersPopup | None = None
         self.worker = ThreadPoolExecutor(max_workers=2, thread_name_prefix="center-stage-gui")
         self.media_library = MediaLibrary(self.config)
         recovery = Path(os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}")) / "center-stage" / "recovery"
@@ -232,9 +363,11 @@ class PhotoBoothWindow(Gtk.ApplicationWindow):
         self.latest_frame: np.ndarray | None = None
         self.frame_lock = threading.Lock()
         self.engine_state = "stopped"
-        self.capture_mode = "photo"
+        self.capture_mode = str(self.config.get("capture_mode", "photo"))
         self.capturing = False
         self.recording = False
+        self.recording_started_at: float | None = None
+        self._recording_timer = 0
         self.four_up_frames: list[np.ndarray] = []
         self._destroyed = False
         self._quitting = False
@@ -251,12 +384,18 @@ class PhotoBoothWindow(Gtk.ApplicationWindow):
         Gst.init(None)
         self._install_css()
         self._build_ui()
+        self._apply_theme(str(self.config.get("theme", "light")))
         application.ensure_indicator(self)
         self._rebuild_indicator_menu()
         self._building = False
         self.show_all()
+        self.gallery_revealer.set_reveal_child(
+            not bool(self.config.get("gallery_collapsed", False))
+        )
+        self._update_gallery_toggle_icon()
         self.countdown_label.hide()
         self.flash_overlay.hide()
+        self.recording_time_label.hide()
         self._refresh_filmstrip()
         self._schedule_device_refresh(force=True)
         self._status_timer = GLib.timeout_add(500, self._poll_status)
@@ -272,38 +411,143 @@ class PhotoBoothWindow(Gtk.ApplicationWindow):
     def _install_css(self) -> None:
         provider = Gtk.CssProvider()
         provider.load_from_data(b"""
+            window.center-stage-window,
+            .theme-light .app-root { background: #fff; color: #17191d; }
+            .theme-light headerbar {
+                background: #fff;
+                background-image: none;
+                color: #17191d;
+                border-color: #e7e8eb;
+                box-shadow: none;
+            }
+            .theme-light headerbar button { color: #202228; }
+            .theme-dark .app-root { background: #17191d; color: #f7f7f8; }
+            .theme-dark headerbar {
+                background: #202227;
+                background-image: none;
+                color: #f7f7f8;
+                border-color: #30333a;
+            }
+            .theme-dark headerbar button { color: #f7f7f8; }
             .camera-stage { background: #111; }
-            .camera-toolbar { padding: 8px 12px; }
+            .camera-stage label,
+            .camera-stage image { color: #f7f7f8; }
             .camera-power { padding: 6px 12px; border-radius: 999px; }
-            .capture-controls { padding: 10px 16px; }
-            .shutter { min-width: 72px; min-height: 52px; border-radius: 999px; font-weight: bold; }
-            .shutter.recording { background: #d33; color: white; }
+            .gallery-panel {
+                padding: 6px 10px 4px 10px;
+                border-top: 1px solid alpha(currentColor, 0.10);
+            }
+            .theme-light .gallery-panel { background: #fff; }
+            .theme-dark .gallery-panel { background: #202227; }
+            .capture-bar {
+                min-height: 54px;
+                padding: 2px 10px;
+                border-top: 1px solid alpha(currentColor, 0.12);
+            }
+            .theme-light .capture-bar { background: #f7f7f8; }
+            .theme-dark .capture-bar { background: #202227; }
+            .mode-group {
+                border: 1px solid alpha(currentColor, 0.16);
+                border-radius: 10px;
+                padding: 2px;
+            }
+            button.mode-button,
+            button.gallery-action,
+            button.effects-button {
+                min-height: 30px;
+                min-width: 32px;
+                padding: 2px 7px;
+                border-radius: 8px;
+                border: 1px solid transparent;
+                background-image: none;
+                box-shadow: none;
+                transition: background-color 160ms ease-in-out,
+                            border-color 160ms ease-in-out,
+                            color 160ms ease-in-out;
+            }
+            .theme-light button.mode-button { color: #202228; background: #f0f1f3; }
+            .theme-light button.mode-button.active {
+                color: #fff; background: #26292f; border-color: #26292f;
+            }
+            .theme-dark button.mode-button { color: #f7f7f8; background: #30333a; }
+            .theme-dark button.mode-button.active {
+                color: #17191d; background: #f7f7f8; border-color: #f7f7f8;
+            }
+            button.mode-button.active image {
+                -gtk-icon-transform: scale(1.08);
+                transition: -gtk-icon-transform 160ms ease-out;
+            }
+            button.shutter {
+                min-width: 48px;
+                min-height: 48px;
+                padding: 0;
+                border-radius: 999px;
+                border: 1px solid alpha(#fff, 0.72);
+                color: #fff;
+                background: #ef3f36;
+                background-image: none;
+                box-shadow: 0 2px 7px alpha(#000, 0.22);
+                transition: background-color 150ms ease-out, box-shadow 150ms ease-out;
+            }
+            button.shutter:hover { background: #f5534b; }
+            button.shutter:active { background: #d92e27; }
+            button.shutter.recording {
+                background: #d92e27;
+                box-shadow: 0 0 0 4px alpha(#ef3f36, 0.22);
+            }
             .countdown { font-size: 64px; font-weight: bold; color: white; }
+            .recording-timer {
+                padding: 5px 9px;
+                border-radius: 999px;
+                color: #fff;
+                background: alpha(#b91616, 0.88);
+                font-weight: bold;
+                font-feature-settings: "tnum";
+            }
             .flash { background: white; }
-            .filmstrip { padding: 8px 12px; background: alpha(@theme_fg_color, 0.06); }
-            .thumbnail { padding: 2px; }
+            .thumbnail { min-width: 104px; min-height: 58px; padding: 2px; border-radius: 7px; }
+            .video-duration {
+                padding: 1px 5px;
+                border-radius: 4px;
+                color: #fff;
+                background: alpha(#000, 0.78);
+                font-weight: bold;
+                font-size: 0.88em;
+            }
+            .album-scrollbar trough { min-height: 4px; border-radius: 999px; }
+            .album-scrollbar slider { min-width: 28px; min-height: 8px; border-radius: 999px; }
             .tray-control-popup { background: @theme_bg_color; border: 1px solid alpha(@theme_fg_color, 0.2); }
             .tray-control-title { font-weight: bold; font-size: 1.08em; }
+            .theme-light .tray-control-popup { background: #fff; color: #17191d; border-color: #d9dadd; }
+            .theme-light .media-folder-entry { background: #fff; color: #17191d; }
+            .theme-light button.media-folder-choose { background: #e9eaec; color: #202228; }
+            .theme-dark .tray-control-popup { background: #202227; color: #f7f7f8; border-color: #3a3d44; }
+            .theme-dark .media-folder-entry { background: #2a2d33; color: #f7f7f8; }
         """)
         screen = self.get_screen()
         if screen:
             Gtk.StyleContext.add_provider_for_screen(screen, provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
 
     def _build_ui(self) -> None:
+        self.get_style_context().add_class("center-stage-window")
         root = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        root.get_style_context().add_class("app-root")
         self.add(root)
-        header = Gtk.HeaderBar(title="Center Stage", subtitle=f"V{__version__}")
-        header.set_show_close_button(True)
-        self.set_titlebar(header)
+        self.header = Gtk.HeaderBar(title="Center Stage", subtitle=f"V{__version__}")
+        self.header.set_show_close_button(True)
+        self.set_titlebar(self.header)
 
         self.camera_combo = Gtk.ComboBoxText()
         self.camera_combo.set_size_request(260, -1)
         self.camera_combo.connect("changed", self._on_window_camera_changed)
-        header.pack_start(self.camera_combo)
+        self.header.pack_start(self.camera_combo)
         self.camera_power_button = Gtk.Button.new_with_label(self._("Turn camera on"))
         self.camera_power_button.get_style_context().add_class("camera-power")
         self.camera_power_button.connect("clicked", self._on_connect_disconnect)
-        header.pack_end(self.camera_power_button)
+        self.header.pack_end(self.camera_power_button)
+        self.theme_button = Gtk.Button()
+        self.theme_button.connect("clicked", self._on_theme_clicked)
+        self.header.pack_end(self.theme_button)
 
         overlay = Gtk.Overlay()
         overlay.set_hexpand(True)
@@ -333,36 +577,168 @@ class PhotoBoothWindow(Gtk.ApplicationWindow):
         self.flash_overlay.set_hexpand(True)
         self.flash_overlay.set_vexpand(True)
         overlay.add_overlay(self.flash_overlay)
+        self.recording_time_label = Gtk.Label(label="● 00:00")
+        self.recording_time_label.set_halign(Gtk.Align.END)
+        self.recording_time_label.set_valign(Gtk.Align.START)
+        self.recording_time_label.set_margin_top(14)
+        self.recording_time_label.set_margin_end(14)
+        self.recording_time_label.get_style_context().add_class("recording-timer")
+        overlay.add_overlay(self.recording_time_label)
 
-        controls = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=18)
-        controls.set_halign(Gtk.Align.CENTER)
-        controls.get_style_context().add_class("capture-controls")
-        first: Gtk.RadioButton | None = None
-        self.mode_buttons: dict[str, Gtk.RadioButton] = {}
-        for mode, label in CAPTURE_MODES:
-            button = Gtk.RadioButton.new_with_label_from_widget(first, self._(label))
-            first = first or button
+        self.gallery_revealer = Gtk.Revealer()
+        self.gallery_revealer.set_transition_type(Gtk.RevealerTransitionType.SLIDE_UP)
+        self.gallery_revealer.set_transition_duration(180)
+        gallery_panel = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=1)
+        gallery_panel.get_style_context().add_class("gallery-panel")
+        self.filmstrip_frame = Gtk.ScrolledWindow()
+        self.filmstrip_frame.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.NEVER)
+        self.filmstrip_frame.set_shadow_type(Gtk.ShadowType.NONE)
+        self.filmstrip_frame.set_size_request(-1, 66)
+        self.filmstrip = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        self.filmstrip_frame.add(self.filmstrip)
+        gallery_panel.pack_start(self.filmstrip_frame, False, False, 0)
+        self.album_scrollbar = Gtk.Scrollbar.new(
+            Gtk.Orientation.HORIZONTAL, self.filmstrip_frame.get_hadjustment()
+        )
+        self.album_scrollbar.set_size_request(-1, 14)
+        self.album_scrollbar.set_margin_start(4)
+        self.album_scrollbar.set_margin_end(4)
+        self.album_scrollbar.get_style_context().add_class("album-scrollbar")
+        gallery_panel.pack_start(self.album_scrollbar, False, False, 0)
+        self.gallery_revealer.add(gallery_panel)
+        root.pack_start(self.gallery_revealer, False, False, 0)
+
+        self.capture_overlay = Gtk.Overlay()
+        self.capture_overlay.set_size_request(-1, 58)
+        self.capture_overlay.get_style_context().add_class("capture-bar")
+        controls = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        controls.set_valign(Gtk.Align.CENTER)
+        mode_group = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
+        mode_group.get_style_context().add_class("mode-group")
+        self.mode_buttons: dict[str, Gtk.Button] = {}
+        for mode, _label in (("four_up", "4-up"), ("photo", "Photo"), ("video", "Video")):
+            button = self._icon_button(MODE_ICONS[mode], self._mode_tooltip(mode), "mode-button")
+            button.set_size_request(36, 32)
+            button.connect("clicked", self._on_mode_changed, mode)
             self.mode_buttons[mode] = button
-            controls.pack_start(button, False, False, 0)
-        self.shutter_button = Gtk.Button.new_with_label(self._("Capture"))
+            mode_group.pack_start(button, False, False, 0)
+        controls.pack_start(mode_group, False, False, 0)
+        controls.pack_start(Gtk.Box(), True, True, 0)
+        self.effects_button = Gtk.Button.new_with_label(self._("Effects"))
+        self.effects_button.set_tooltip_text(self._("Effects (coming soon)"))
+        self.effects_button.get_style_context().add_class("effects-button")
+        controls.pack_end(self.effects_button, False, False, 0)
+        self.gallery_toggle = self._icon_button(
+            "pan-down-symbolic", self._("Hide album"), "gallery-action"
+        )
+        self.gallery_toggle.set_size_request(36, 32)
+        self.gallery_toggle.connect("clicked", self._on_gallery_toggled)
+        controls.pack_end(self.gallery_toggle, False, False, 0)
+        self.capture_overlay.add(controls)
+
+        self.capture_icon_stack = Gtk.Stack()
+        self.capture_icon_stack.set_transition_type(Gtk.StackTransitionType.CROSSFADE)
+        self.capture_icon_stack.set_transition_duration(160)
+        self.capture_icon_stack.add_named(
+            Gtk.Image.new_from_icon_name("camera-photo-symbolic", Gtk.IconSize.LARGE_TOOLBAR),
+            "photo",
+        )
+        self.capture_icon_stack.add_named(
+            Gtk.Image.new_from_icon_name("camera-video-symbolic", Gtk.IconSize.LARGE_TOOLBAR),
+            "video",
+        )
+        self.capture_icon_stack.add_named(
+            Gtk.Image.new_from_icon_name("media-playback-stop-symbolic", Gtk.IconSize.LARGE_TOOLBAR),
+            "stop",
+        )
+        self.shutter_button = Gtk.Button()
+        self.shutter_button.add(self.capture_icon_stack)
+        self.shutter_button.set_halign(Gtk.Align.CENTER)
+        self.shutter_button.set_valign(Gtk.Align.CENTER)
         self.shutter_button.get_style_context().add_class("shutter")
         self.shutter_button.connect("clicked", self._on_shutter_clicked)
-        controls.pack_start(self.shutter_button, False, False, 12)
-        for mode, button in self.mode_buttons.items():
-            button.connect("toggled", self._on_mode_changed, mode)
-        self.mode_buttons.get(self.capture_mode, self.mode_buttons["photo"]).set_active(True)
-        self.shutter_button.set_label(self._("Record") if self.capture_mode == "video" else self._("Capture"))
-        root.pack_start(controls, False, False, 0)
+        self.capture_overlay.add_overlay(self.shutter_button)
+        root.pack_start(self.capture_overlay, False, False, 0)
+        self._select_capture_mode(self.capture_mode, persist=False)
 
-        filmstrip_frame = Gtk.ScrolledWindow()
-        filmstrip_frame.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.NEVER)
-        filmstrip_frame.set_size_request(-1, 92)
-        filmstrip_frame.get_style_context().add_class("filmstrip")
-        self.filmstrip = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-        filmstrip_viewport = Gtk.Viewport()
-        filmstrip_viewport.add(self.filmstrip)
-        filmstrip_frame.add(filmstrip_viewport)
-        root.pack_end(filmstrip_frame, False, False, 0)
+    @staticmethod
+    def _icon_button(icon_name: str, tooltip: str, style_class: str) -> Gtk.Button:
+        button = Gtk.Button()
+        button.set_image(Gtk.Image.new_from_icon_name(icon_name, Gtk.IconSize.BUTTON))
+        button.set_tooltip_text(tooltip)
+        button.get_style_context().add_class(style_class)
+        return button
+
+    def _mode_tooltip(self, mode: str) -> str:
+        return {
+            "four_up": self._("4-up"),
+            "photo": self._("Photo"),
+            "video": self._("Video"),
+        }[mode]
+
+    def _apply_theme(self, theme: str) -> None:
+        theme = "dark" if theme == "dark" else "light"
+        style = self.get_style_context()
+        style.remove_class("theme-light")
+        style.remove_class("theme-dark")
+        style.add_class(f"theme-{theme}")
+        settings = Gtk.Settings.get_default()
+        if settings is not None:
+            settings.set_property("gtk-application-prefer-dark-theme", theme == "dark")
+        icon_name = "weather-clear-symbolic" if theme == "dark" else "weather-clear-night-symbolic"
+        self.theme_button.set_image(Gtk.Image.new_from_icon_name(icon_name, Gtk.IconSize.BUTTON))
+        self.theme_button.set_tooltip_text(
+            self._("Use light theme") if theme == "dark" else self._("Use dark theme")
+        )
+
+    def _set_theme(self, theme: str, *, persist: bool = True) -> None:
+        theme = "dark" if theme == "dark" else "light"
+        self.config["theme"] = theme
+        if persist:
+            save_config(self.config)
+        self._apply_theme(theme)
+        theme_items = getattr(self, "theme_menu_items", {})
+        selected = theme_items.get(theme)
+        if selected is not None and not selected.get_active():
+            self._syncing = True
+            selected.set_active(True)
+            self._syncing = False
+
+    def _on_theme_clicked(self, _button: Gtk.Button) -> None:
+        self._set_theme("dark" if self.config.get("theme") == "light" else "light")
+
+    def _on_gallery_toggled(self, _button: Gtk.Button) -> None:
+        visible = self.gallery_revealer.get_reveal_child()
+        self.gallery_revealer.set_reveal_child(not visible)
+        self.config["gallery_collapsed"] = visible
+        save_config(self.config)
+        self._update_gallery_toggle_icon()
+
+    def _update_gallery_toggle_icon(self) -> None:
+        visible = self.gallery_revealer.get_reveal_child()
+        self.gallery_toggle.set_image(
+            Gtk.Image.new_from_icon_name(
+                "pan-down-symbolic" if visible else "pan-up-symbolic", Gtk.IconSize.BUTTON
+            )
+        )
+        self.gallery_toggle.set_tooltip_text(
+            self._("Hide album") if visible else self._("Show album")
+        )
+
+    def _select_capture_mode(self, mode: str, *, persist: bool = True) -> None:
+        if mode not in self.mode_buttons:
+            mode = "photo"
+        self.capture_mode = mode
+        for candidate, button in self.mode_buttons.items():
+            style = button.get_style_context()
+            if candidate == mode:
+                style.add_class("active")
+            else:
+                style.remove_class("active")
+        self.capture_icon_stack.set_visible_child_name("video" if mode == "video" else "photo")
+        if persist:
+            self.config["capture_mode"] = mode
+            save_config(self.config)
 
     def _rebuild_indicator_menu(self) -> None:
         indicator = self.app_shell.indicator
@@ -372,6 +748,9 @@ class PhotoBoothWindow(Gtk.ApplicationWindow):
             self.control_popup = None
             self.control_popup_kind = ""
             self.control_scales.clear()
+        if self.configure_popup is not None:
+            self.configure_popup.destroy()
+            self.configure_popup = None
         menu = Gtk.Menu()
         self.tray_status_item = Gtk.MenuItem.new_with_label(self._("Turn camera on"))
         self.tray_status_item.set_sensitive(False)
@@ -415,9 +794,9 @@ class PhotoBoothWindow(Gtk.ApplicationWindow):
         adjustments = Gtk.MenuItem.new_with_label(self._("Image Adjustments"))
         adjustments.connect("activate", self._show_image_adjustments_popup)
         menu.append(adjustments)
-        folder = Gtk.MenuItem.new_with_label(self._("Media Folder…"))
-        folder.connect("activate", self._choose_media_folder)
-        menu.append(folder)
+        configure = Gtk.MenuItem.new_with_label(self._("Configure…"))
+        configure.connect("activate", self._show_media_folders_popup)
+        menu.append(configure)
         language = Gtk.MenuItem.new_with_label(self._("Language"))
         language_menu = Gtk.Menu()
         group: Gtk.RadioMenuItem | None = None
@@ -429,6 +808,19 @@ class PhotoBoothWindow(Gtk.ApplicationWindow):
             language_menu.append(item)
         language.set_submenu(language_menu)
         menu.append(language)
+        theme = Gtk.MenuItem.new_with_label(self._("Theme"))
+        theme_menu = Gtk.Menu()
+        self.theme_menu_items: dict[str, Gtk.RadioMenuItem] = {}
+        theme_group: Gtk.RadioMenuItem | None = None
+        for theme_name, label in (("light", N_("Light Theme")), ("dark", N_("Dark Theme"))):
+            item = Gtk.RadioMenuItem.new_with_label_from_widget(theme_group, self._(label))
+            theme_group = theme_group or item
+            item.set_active(theme_name == self.config.get("theme", "light"))
+            item.connect("toggled", self._on_theme_selected, theme_name)
+            self.theme_menu_items[theme_name] = item
+            theme_menu.append(item)
+        theme.set_submenu(theme_menu)
+        menu.append(theme)
         menu.append(Gtk.SeparatorMenuItem())
         show = Gtk.MenuItem.new_with_label(self._("Show Center Stage"))
         show.connect("activate", lambda _item: self.present_window())
@@ -777,6 +1169,12 @@ class PhotoBoothWindow(Gtk.ApplicationWindow):
         self._retranslate_in_place()
         LOGGER.info("Language changed language=%s", language)
 
+    def _on_theme_selected(self, item: Gtk.RadioMenuItem, theme: str) -> None:
+        if self._syncing or not item.get_active() or theme == self.config.get("theme"):
+            return
+        self._set_theme(theme)
+        LOGGER.info("Theme changed theme=%s", theme)
+
     def _retranslate_in_place(self) -> None:
         """Rebuild child widgets and menu without replacing the window or indicator."""
         was_previewing = self.preview_running
@@ -786,30 +1184,62 @@ class PhotoBoothWindow(Gtk.ApplicationWindow):
         if child is not None:
             self.remove(child)
         self._build_ui()
+        self._apply_theme(str(self.config.get("theme", "light")))
         self._rebuild_indicator_menu()
         self.show_all()
+        self.gallery_revealer.set_reveal_child(
+            not bool(self.config.get("gallery_collapsed", False))
+        )
+        self._update_gallery_toggle_icon()
         self.countdown_label.hide()
         self.flash_overlay.hide()
+        self.recording_time_label.set_visible(self.recording)
+        if self.recording:
+            self.capture_icon_stack.set_visible_child_name("stop")
+            self.shutter_button.get_style_context().add_class("recording")
+            for button in self.mode_buttons.values():
+                button.set_sensitive(False)
+            self._update_recording_time()
         self._refresh_filmstrip()
         if was_previewing and self.engine_state == "running":
             self._start_preview()
 
-    def _choose_media_folder(self, _item: Gtk.MenuItem) -> None:
-        chooser = Gtk.FileChooserDialog(title=self._("Choose Media Folder"), transient_for=self, action=Gtk.FileChooserAction.SELECT_FOLDER)
-        chooser.add_buttons(self._("Cancel"), Gtk.ResponseType.CANCEL, self._("Select"), Gtk.ResponseType.OK)
-        chooser.set_current_folder(str(self.media_library.folder))
-        if chooser.run() == Gtk.ResponseType.OK:
-            selected = chooser.get_filename()
-            if selected:
-                self.config["media_folder"] = selected
-                save_config(self.config)
-                self._refresh_filmstrip()
-        chooser.destroy()
+    def _show_media_folders_popup(self, _item: Gtk.MenuItem) -> None:
+        if self.configure_popup is not None:
+            self.configure_popup.destroy()
+        popup = MediaFoldersPopup(self, self._("Configure Media"), self._set_media_folder)
+        popup.add_folder_row(
+            "pictures_folder",
+            self._("Pictures"),
+            self._("Choose the folder where Center Stage will save pictures"),
+            self.media_library.pictures_folder,
+        )
+        popup.add_folder_row(
+            "videos_folder",
+            self._("Videos"),
+            self._("Choose the folder where Center Stage will save videos"),
+            self.media_library.videos_folder,
+        )
+        self.configure_popup = popup
+        popup.present_at_pointer()
 
-    def _on_mode_changed(self, button: Gtk.RadioButton, mode: str) -> None:
-        if button.get_active() and not self.recording:
-            self.capture_mode = mode
-            self.shutter_button.set_label(self._("Record") if mode == "video" else self._("Capture"))
+    def _set_media_folder(self, config_key: str, folder: Path) -> None:
+        if config_key not in {"pictures_folder", "videos_folder"}:
+            return
+        destination = folder.expanduser().resolve()
+        try:
+            destination.mkdir(parents=True, exist_ok=True)
+        except OSError as error:
+            self._media_error(error)
+            return
+        self.config[config_key] = str(destination)
+        save_config(self.config)
+        self._refresh_filmstrip()
+        LOGGER.info("Media folder changed key=%s path=%s", config_key, destination)
+
+    def _on_mode_changed(self, _button: Gtk.Button, mode: str) -> None:
+        if not self.recording:
+            self._select_capture_mode(mode)
 
     def _on_shutter_clicked(self, _button: Gtk.Button) -> None:
         if self.recording:
@@ -818,7 +1248,10 @@ class PhotoBoothWindow(Gtk.ApplicationWindow):
         if self.capturing or self.engine_state != "running" or self.latest_frame is None:
             return
         if self.capture_mode == "video":
-            self._start_recording()
+            self.capturing = True
+            for button in self.mode_buttons.values():
+                button.set_sensitive(False)
+            self._countdown(3, self._start_recording)
         else:
             self.capturing = True
             self.four_up_frames = []
@@ -879,6 +1312,11 @@ class PhotoBoothWindow(Gtk.ApplicationWindow):
         self._refresh_filmstrip()
 
     def _start_recording(self) -> None:
+        if self.engine_state != "running":
+            self.capturing = False
+            for button in self.mode_buttons.values():
+                button.set_sensitive(True)
+            return
         try:
             self.recorder.start(
                 self.media_library.video_path(),
@@ -889,19 +1327,36 @@ class PhotoBoothWindow(Gtk.ApplicationWindow):
             LOGGER.exception("Recording failed to start")
             self._media_error(error)
             return
+        self.capturing = False
         self.recording = True
-        self.shutter_button.set_label(self._("Stop"))
+        self.recording_started_at = time.monotonic()
+        self.capture_icon_stack.set_visible_child_name("stop")
         self.shutter_button.get_style_context().add_class("recording")
+        self.recording_time_label.show()
+        self._update_recording_time()
+        if self._recording_timer:
+            GLib.source_remove(self._recording_timer)
+        self._recording_timer = GLib.timeout_add(250, self._recording_timer_tick)
         for button in self.mode_buttons.values():
             button.set_sensitive(False)
-        LOGGER.info("Recording started microphone=%s muted=%s", self.config.get("selected_microphone_id"), self.config.get("microphone_muted"))
+        LOGGER.info(
+            "Recording started encoder=%s microphone=%s muted=%s",
+            self.recorder.encoder_name,
+            self.config.get("selected_microphone_id"),
+            self.config.get("microphone_muted"),
+        )
 
     def _stop_recording(self) -> None:
         if not self.recording:
             return
         path = self.recorder.stop()
         self.recording = False
-        self.shutter_button.set_label(self._("Record"))
+        self.recording_started_at = None
+        if self._recording_timer:
+            GLib.source_remove(self._recording_timer)
+            self._recording_timer = 0
+        self.recording_time_label.hide()
+        self.capture_icon_stack.set_visible_child_name("video")
         self.shutter_button.get_style_context().remove_class("recording")
         for button in self.mode_buttons.values():
             button.set_sensitive(True)
@@ -912,6 +1367,19 @@ class PhotoBoothWindow(Gtk.ApplicationWindow):
         if path.parent == self.recorder.recovery_folder:
             self._notify(self._("Video recovered"), self._("The selected folder was unavailable; the video was kept in the recovery folder."))
         self._refresh_filmstrip()
+
+    def _update_recording_time(self) -> None:
+        elapsed = 0
+        if self.recording_started_at is not None:
+            elapsed = int(time.monotonic() - self.recording_started_at)
+        self.recording_time_label.set_text(f"● {format_duration(elapsed)}")
+
+    def _recording_timer_tick(self) -> bool:
+        if not self.recording or self._destroyed:
+            self._recording_timer = 0
+            return False
+        self._update_recording_time()
+        return True
 
     def _on_recording_message(self, _bus: Gst.Bus, message: Gst.Message) -> None:
         if message.type != Gst.MessageType.ERROR:
@@ -939,6 +1407,12 @@ class PhotoBoothWindow(Gtk.ApplicationWindow):
 
     def _media_error(self, error: Exception) -> None:
         self.capturing = False
+        if not self.recording:
+            for button in self.mode_buttons.values():
+                button.set_sensitive(True)
+            self.capture_icon_stack.set_visible_child_name(
+                "video" if self.capture_mode == "video" else "photo"
+            )
         LOGGER.error("Media operation failed: %s", error)
         dialog = Gtk.MessageDialog(transient_for=self, flags=Gtk.DialogFlags.MODAL, message_type=Gtk.MessageType.ERROR, buttons=Gtk.ButtonsType.CLOSE, text=self._("Media could not be saved"))
         dialog.format_secondary_text(str(error))
@@ -948,18 +1422,30 @@ class PhotoBoothWindow(Gtk.ApplicationWindow):
     def _refresh_filmstrip(self) -> None:
         for child in self.filmstrip.get_children():
             self.filmstrip.remove(child)
-        media = list_media(self.media_library.folder)
+        media = list_media_folders(self.media_library.folders)
         if not media:
             label = Gtk.Label(label=self._("Your photos and videos will appear here."))
             self.filmstrip.pack_start(label, False, False, 8)
         for path in media:
-            frame = thumbnail(path)
+            preview = media_preview(path)
+            frame = preview.frame
             if frame is None:
                 continue
             rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             height, width, channels = rgb.shape
             pixbuf = GdkPixbuf.Pixbuf.new_from_bytes(GLib.Bytes.new(rgb.tobytes()), GdkPixbuf.Colorspace.RGB, False, 8, width, height, width * channels)
-            button = Gtk.Button(image=Gtk.Image.new_from_pixbuf(pixbuf))
+            media_overlay = Gtk.Overlay()
+            media_overlay.add(Gtk.Image.new_from_pixbuf(pixbuf))
+            if preview.duration_seconds is not None:
+                duration = Gtk.Label(label=format_duration(preview.duration_seconds))
+                duration.set_halign(Gtk.Align.END)
+                duration.set_valign(Gtk.Align.END)
+                duration.set_margin_end(4)
+                duration.set_margin_bottom(4)
+                duration.get_style_context().add_class("video-duration")
+                media_overlay.add_overlay(duration)
+            button = Gtk.Button()
+            button.add(media_overlay)
             button.get_style_context().add_class("thumbnail")
             button.set_tooltip_text(path.name)
             button.connect("clicked", lambda _button, item=path: self._open_path(item))
@@ -1158,6 +1644,9 @@ class PhotoBoothWindow(Gtk.ApplicationWindow):
         self.show_all()
         self.countdown_label.set_visible(self.capturing)
         self.flash_overlay.hide()
+        self.recording_time_label.set_visible(self.recording)
+        if self.recording:
+            self._update_recording_time()
         self.present()
 
     def _on_delete_event(self, _window: Gtk.Window, _event: Any) -> bool:
@@ -1190,8 +1679,13 @@ class PhotoBoothWindow(Gtk.ApplicationWindow):
         for source in self.effect_timers.values():
             if source:
                 GLib.source_remove(source)
+        if self._recording_timer:
+            GLib.source_remove(self._recording_timer)
+            self._recording_timer = 0
         if self.control_popup is not None:
             self.control_popup.destroy()
+        if self.configure_popup is not None:
+            self.configure_popup.destroy()
         self._stop_preview()
         self.worker.shutdown(wait=False, cancel_futures=True)
 

@@ -15,6 +15,9 @@ CONTROL_NAMES = ("brightness", "contrast", "saturation", "hue")
 DEFAULT_CONFIG: dict[str, Any] = {
     "version": 4,
     "language": "en",
+    "theme": "light",
+    "capture_mode": "photo",
+    "gallery_collapsed": False,
     "selected_camera_id": None,
     "center_stage_enabled": True,
     "mirror_output": False,
@@ -24,6 +27,8 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "studio_light_strength": 50,
     "selected_microphone_id": None,
     "microphone_muted": False,
+    "pictures_folder": "",
+    "videos_folder": "",
     "media_folder": "",
     "output_device": "/dev/video10",
     "width": 1920,
@@ -70,6 +75,10 @@ def load_config(path: Path | None = None) -> dict[str, Any]:
     result["version"] = DEFAULT_CONFIG["version"]
     if result["language"] not in {"en", "vi"}:
         result["language"] = "en"
+    if result["theme"] not in {"light", "dark"}:
+        result["theme"] = "light"
+    if result["capture_mode"] not in {"photo", "four_up", "video"}:
+        result["capture_mode"] = "photo"
     if not isinstance(result["camera_controls"], dict):
         result["camera_controls"] = {}
     result["center_stage_enabled"] = bool(result["center_stage_enabled"])
@@ -79,14 +88,36 @@ def load_config(path: Path | None = None) -> dict[str, Any]:
     result["portrait_strength"] = max(0, min(100, int(result["portrait_strength"])))
     result["studio_light_strength"] = max(0, min(100, int(result["studio_light_strength"])))
     result["microphone_muted"] = bool(result["microphone_muted"])
-    if not isinstance(result["media_folder"], str):
-        result["media_folder"] = ""
+    result["gallery_collapsed"] = bool(result["gallery_collapsed"])
+    for folder_key in ("pictures_folder", "videos_folder", "media_folder"):
+        if not isinstance(result[folder_key], str):
+            result[folder_key] = ""
     return result
 
 
+def pictures_folder(config: dict[str, Any]) -> Path:
+    configured = str(config.get("pictures_folder") or "").strip()
+    return Path(configured).expanduser() if configured else Path.home() / "Pictures"
+
+
+def videos_folder(config: dict[str, Any]) -> Path:
+    configured = str(config.get("videos_folder") or "").strip()
+    return Path(configured).expanduser() if configured else Path.home() / "Videos"
+
+
+def media_folders(config: dict[str, Any]) -> tuple[Path, ...]:
+    folders = [pictures_folder(config), videos_folder(config)]
+    legacy = str(config.get("media_folder") or "").strip()
+    if legacy:
+        legacy_folder = Path(legacy).expanduser()
+        if legacy_folder not in folders:
+            folders.append(legacy_folder)
+    return tuple(folders)
+
+
 def media_folder(config: dict[str, Any]) -> Path:
-    configured = str(config.get("media_folder") or "").strip()
-    return Path(configured).expanduser() if configured else Path.home() / "Pictures" / "Center Stage"
+    """Compatibility alias for callers that previously stored all media together."""
+    return pictures_folder(config)
 
 
 def save_config(config: dict[str, Any], path: Path | None = None) -> None:
@@ -95,6 +126,13 @@ def save_config(config: dict[str, Any], path: Path | None = None) -> None:
     data = {key: config.get(key, deepcopy(value)) for key, value in DEFAULT_CONFIG.items()}
     if data["language"] not in {"en", "vi"}:
         data["language"] = "en"
+    if data["theme"] not in {"light", "dark"}:
+        data["theme"] = "light"
+    if data["capture_mode"] not in {"photo", "four_up", "video"}:
+        data["capture_mode"] = "photo"
+    for folder_key in ("pictures_folder", "videos_folder", "media_folder"):
+        if not isinstance(data[folder_key], str):
+            data[folder_key] = ""
     _atomic_json_write(target, data, mode=0o600)
 
 

@@ -6,9 +6,9 @@ from pathlib import Path
 class DebianPackageTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.package = Path(__file__).resolve().parent.parent / "dist" / "center-stage_4.4.0_amd64.deb"
+        cls.package = Path(__file__).resolve().parent.parent / "dist" / "center-stage_4.5.1_amd64.deb"
         if not cls.package.is_file():
-            raise unittest.SkipTest("build dist/center-stage_4.4.0_amd64.deb first")
+            raise unittest.SkipTest("build dist/center-stage_4.5.1_amd64.deb first")
 
     def test_package_is_within_release_budget(self):
         self.assertLessEqual(self.package.stat().st_size, 75 * 1024 * 1024)
@@ -26,7 +26,7 @@ class DebianPackageTests(unittest.TestCase):
             capture_output=True,
             check=True,
         ).stdout
-        self.assertIn("Version: 4.4.0", metadata)
+        self.assertIn("Version: 4.5.1", metadata)
         self.assertIn("gir1.2-ayatanaappindicator3-0.1", metadata)
         self.assertIn("center-stage-active.svg", contents)
         self.assertIn("center-stage-idle.svg", contents)
