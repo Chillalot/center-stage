@@ -165,3 +165,64 @@ v4l2-ctl --list-devices
 ```
 
 Secure Boot may prevent an unsigned DKMS module from loading.
+
+## Contributing
+
+Center Stage is organized around a headless camera engine and a thin GTK
+controller. Keep changes focused on one layer when possible:
+
+| Area | Primary files | Contribution focus |
+| --- | --- | --- |
+| Camera engine | `center_stage/engine.py`, `devices.py`, `framing.py` | PipeWire capture, face tracking, effects, V4L2 output |
+| Desktop UI | `center_stage/gui.py` | GTK layout, tray actions, capture workflow, accessibility |
+| Media | `center_stage/media.py` | Recording pipelines, thumbnails, folder handling |
+| Configuration | `center_stage/config.py` | Backward-compatible settings and atomic persistence |
+| Localization | `po/vi.po`, `po/center-stage.pot` | English/Vietnamese strings and gettext validation |
+| Packaging | `packaging/`, `tests/test_package.py` | Debian package, systemd unit, install lifecycle |
+
+Before opening a pull request:
+
+1. Branch from `main` with a focused name such as `fix/config-validation` or
+   `feat/media-export`.
+2. Keep the patch scoped; do not commit `dist/`, local recordings, recovery
+   files, virtual environments, or personal configuration.
+3. Add or update a regression test for behavior changes.
+4. Run the default suite and gettext validation:
+
+   ```bash
+   .venv/bin/python -m unittest discover -s tests -v
+   msgfmt --check --check-format -o /dev/null po/vi.po
+   ```
+
+5. Run integration, hardware, or browser suites only when the required device
+   and services are available, and document skipped opt-in checks in the PR.
+6. Describe the user impact, failure mode, validation performed, and any
+   migration or packaging implications in the PR body.
+
+## Collaboration plan
+
+The project uses small, reviewable workstreams. A contributor can own one
+workstream while a collaborator reviews its boundary with adjacent modules:
+
+| Phase | Goal | Exit criteria |
+| --- | --- | --- |
+| 1. Stabilize | Validate config inputs, cancel pending GTK timers, and avoid blocking UI paths | Corrupt-config and lifecycle regressions are covered by tests |
+| 2. Harden media | Make recording paths/parser inputs robust and keep EOS handling off the GTK main loop | Paths with unusual names work; stop/recovery behavior is tested |
+| 3. Smooth UI | Move album thumbnail/decode work off the main loop and preserve tray/window state | Album refresh remains responsive with large folders |
+| 4. Verify hardware | Exercise PipeWire sharing, V4L2 output, VA-API fallback, microphones, and browser capture | Opt-in integration suites pass on supported hardware |
+| 5. Release | Update version, translations, README, package metadata, and release notes together | Tests pass, `.deb` metadata matches, and the GitHub release includes the artifact |
+
+For parallel work, agree on file ownership before editing. Prefer one
+integration PR per phase, rebase only when needed, and have a collaborator
+review cross-cutting changes to `config.py`, `engine.py`, or `media.py` before
+merge. The maintainer makes the final release/version decision; contributors
+should not publish packages or alter the default branch directly.
+
+## Maintainer release checklist
+
+- Confirm the version is identical in `center_stage/__init__.py`,
+  `packaging/build_deb.sh`, README examples, translations, and package tests.
+- Run the default test suite, `msgfmt`, and any available opt-in checks.
+- Build the Debian package and verify its metadata, contents, size, and SHA-256.
+- Create a version tag and GitHub Release with the `.deb` attached.
+- Record known limitations and skipped hardware checks in the release notes.
