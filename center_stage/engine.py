@@ -40,6 +40,7 @@ except (ImportError, AttributeError, ValueError):  # Windows has no PyGObject
 
 from .config import camera_control_values, load_config, preview_socket_path, runtime_dir, write_status
 from .devices import CameraDevice, apply_saved_controls, find_camera
+from .errors import EngineError
 from .framing import AutoFramer, FaceBox, clamp, crop_and_resize
 from .platform_paths import bundled_roots
 
@@ -222,12 +223,6 @@ class AdaptiveQualityGovernor:
         if self._candidate_count >= 2:
             self.level = candidate
         return self.level
-
-
-class EngineError(RuntimeError):
-    def __init__(self, code: str, message: str):
-        super().__init__(message)
-        self.code = code
 
 
 @dataclass(frozen=True)

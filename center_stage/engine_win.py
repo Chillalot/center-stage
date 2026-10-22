@@ -27,7 +27,6 @@ from .engine import (
     AmbientLightEstimator,
     AutoFramer,
     DeviceCapabilityProfile,
-    EngineError,
     FpsCounter,
     InputCaps,
     LivePersonSegmenter,
@@ -40,6 +39,7 @@ from .engine import (
     model_path,
     segmentation_model_path,
 )
+from .errors import EngineError
 from .media_win import WindowsRecorder
 
 VIRTUAL_CAMERA_NAME = "OBS Virtual Camera"
@@ -574,3 +574,20 @@ def main(argv: Sequence[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
+
+def run_pipeline(
+    config: dict[str, Any],
+    camera: CameraDevice,
+    *,
+    preview: bool = True,
+    publish_status: bool = True,
+) -> None:
+    """Run the Windows pipeline with the CLI's blocking contract."""
+    pipeline = WindowsPipeline(
+        config,
+        camera,
+        publish_status=publish_status,
+    )
+    del preview
+    pipeline.run()
