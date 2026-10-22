@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  linux:
+    name: Linux tests
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            gettext \
+            gir1.2-ayatanaappindicator3-0.1 \
+            gir1.2-gst-plugins-base-1.0 \
+            gir1.2-gstreamer-1.0 \
+            gir1.2-gtk-3.0 \
+            gstreamer1.0-plugins-bad \
+            gstreamer1.0-plugins-base \
+            gstreamer1.0-plugins-good \
+            gstreamer1.0-plugins-ugly \
+            gstreamer1.0-tools \
+            libcairo2 \
+            libegl1 \
+            libgl1 \
+            libgles2 \
+            python3-gi \
+            python3-pil \
+            shellcheck \
+            v4l-utils
+
+      - name: Create test environment
+        run: |
+          python3 -m venv --system-site-packages .venv
+          .venv/bin/python -m pip install --upgrade pip
+          .venv/bin/python -m pip install -r requirements.txt
+          .venv/bin/python -m pip install --no-deps mediapipe==0.10.35
+
+      - name: Run unit tests
+        run: .venv/bin/python -m unittest discover -s tests -v
+
+      - name: Validate Vietnamese catalog
+        run: msgfmt --check --check-format -o /dev/null po/vi.po
+
+      - name: Lint shell scripts
+        run: |
+          shellcheck packaging/*.sh packaging/preinst packaging/postinst packaging/prerm packaging/postrm tests/*.sh

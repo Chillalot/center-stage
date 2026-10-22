@@ -6,6 +6,13 @@ __pycache__/
 build/
 dist/
 *.deb
+*.AppImage
+*.AppImage.zsync
+*.exe
+*.msi
+*.zip
+.appimage-builder-cache/
+release/
 
 .coverage
 .pytest_cache/

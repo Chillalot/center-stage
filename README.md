@@ -1,4 +1,4 @@
-# Center Stage V4.5.1
+# Center Stage V5.0.0
 
 Center Stage turns a physical webcam into a face-tracking virtual camera on
 Linux. The V4 desktop app provides a lightweight GTK3 interface in English and
@@ -61,13 +61,13 @@ chmod +x packaging/build_deb.sh
 The result is:
 
 ```text
-dist/center-stage_4.5.1_amd64.deb
+dist/center-stage_5.0.0_amd64.deb
 ```
 
 Install it with:
 
 ```bash
-sudo apt install ./dist/center-stage_4.5.1_amd64.deb
+sudo apt install ./dist/center-stage_5.0.0_amd64.deb
 ```
 
 The package expects a working `v4l2loopback` kernel module. It configures the
