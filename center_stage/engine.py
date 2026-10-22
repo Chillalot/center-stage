@@ -56,7 +56,8 @@ SEGMENTATION_INPUT_WIDTH = 256
 EFFECTS_WIDTH = 640
 CONFIG_POLL_INTERVAL = 0.15
 MIN_DETECTION_CONFIDENCE = 0.5
-CAMERA_START_TIMEOUT_NS = 5 * (Gst.SECOND if Gst is not None else 1_000_000_000)
+NANOSECONDS_PER_SECOND = 1_000_000_000
+CAMERA_START_TIMEOUT_NS = 5 * NANOSECONDS_PER_SECOND
 CAMERA_STALL_SECONDS = 2.0
 
 if Gst is not None:
@@ -498,7 +499,7 @@ def raw_bgr_payload(frame: np.ndarray) -> bytes:
 
 
 def output_timestamps(frame_index: int) -> tuple[int, int]:
-    duration = Gst.SECOND // OUTPUT_FPS
+    duration = NANOSECONDS_PER_SECOND // OUTPUT_FPS
     return frame_index * duration, duration
 
 

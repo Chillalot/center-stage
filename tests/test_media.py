@@ -92,6 +92,7 @@ class MediaTests(unittest.TestCase):
             media = list_media_folders(folders)
         self.assertEqual([path.parent.name for path in media], ["Legacy", "Videos", "Pictures"])
 
+    @unittest.skipUnless(GST_AVAILABLE, "GStreamer is not installed")
     def test_recording_moves_across_filesystems_atomically(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
