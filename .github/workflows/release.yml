@@ -11,7 +11,7 @@ on:
         required: true
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   linux:
@@ -127,6 +127,8 @@ jobs:
     name: Publish GitHub release
     runs-on: ubuntu-24.04
     needs: [linux, windows]
+    permissions:
+      contents: write
     steps:
       - name: Check out
         uses: actions/checkout@v4
