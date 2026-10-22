@@ -231,6 +231,19 @@ class SettingsDialog(QDialog):
         self.check_updates = QCheckBox(window._("Check for updates automatically"))
         self.check_updates.setChecked(bool(window.config.get("check_for_updates", True)))
         layout.addWidget(self.check_updates)
+
+        channel_row = QHBoxLayout()
+        channel_row.addWidget(QLabel(window._("Update channel")))
+        self.update_channel = QComboBox()
+        self.update_channel.addItem(window._("Stable"), "stable")
+        self.update_channel.addItem(window._("Beta"), "beta")
+        channel_index = self.update_channel.findData(
+            str(window.config.get("update_channel", "stable"))
+        )
+        self.update_channel.setCurrentIndex(max(0, channel_index))
+        channel_row.addWidget(self.update_channel, 1)
+        layout.addLayout(channel_row)
+
         self.autostart = QCheckBox(window._("Start Center Stage when I sign in"))
         self.autostart.setChecked(bool(window.config.get("autostart", False)))
         layout.addWidget(self.autostart)
@@ -249,6 +262,7 @@ class SettingsDialog(QDialog):
         config["pictures_folder"] = self.pictures_edit.text().strip()
         config["videos_folder"] = self.videos_edit.text().strip()
         config["check_for_updates"] = self.check_updates.isChecked()
+        config["update_channel"] = self.update_channel.currentData()
         config["autostart"] = self.autostart.isChecked()
         save_config(config)
         _set_autostart(config["autostart"])
@@ -906,7 +920,9 @@ class CenterStageWindow(QMainWindow):
             return
         self._set_status(self._("Checking for updates…"))
         try:
-            result = check_for_updates()
+            result = check_for_updates(
+                channel=str(self.config.get("update_channel", "stable"))
+            )
         except Exception as error:
             self._set_status(str(error), error=True)
             return
@@ -928,12 +944,17 @@ class CenterStageWindow(QMainWindow):
             from .updater import check_for_updates
         except ImportError:
             return
-        thread = threading.Thread(target=self._silent_update_check, args=(check_for_updates,), daemon=True)
+        channel = str(self.config.get("update_channel", "stable"))
+        thread = threading.Thread(
+            target=self._silent_update_check,
+            args=(check_for_updates, channel),
+            daemon=True,
+        )
         thread.start()
 
-    def _silent_update_check(self, check) -> None:
+    def _silent_update_check(self, check, channel: str) -> None:
         try:
-            result = check()
+            result = check(channel=channel)
         except Exception:
             return
         if result is not None:

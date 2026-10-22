@@ -477,3 +477,12 @@ msgstr "Center Stage đã là bản mới nhất."
 #: center_stage/gui_qt.py
 msgid "Center Stage {version} is available."
 msgstr "Đã có Center Stage {version}."
+
+msgid "Update channel"
+msgstr "Kênh cập nhật"
+
+msgid "Stable"
+msgstr "Ổn định"
+
+msgid "Beta"
+msgstr "Beta"

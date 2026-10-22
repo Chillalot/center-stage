@@ -1740,8 +1740,15 @@ CenterStageApplication = AppShell
 CenterStageWindow = PhotoBoothWindow
 
 
-def main() -> int:
-    return AppShell().run(sys.argv)
+def main(argv: list[str] | None = None) -> int:
+    args = list(sys.argv if argv is None else argv)
+    if "--version" in args:
+        print(f"Center Stage {__version__}")
+        return 0
+    if "--help" in args or "-h" in args:
+        print("Usage: center-stage [--version] [--help]")
+        return 0
+    return AppShell().run(args)
 
 
 if __name__ == "__main__":

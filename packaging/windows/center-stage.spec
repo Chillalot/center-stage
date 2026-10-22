@@ -23,6 +23,7 @@ for package in ("mediapipe", "pyvirtualcam", "sounddevice", "imageio_ffmpeg"):
     binaries += collect_dynamic_libs(package)
 
 hiddenimports = [
+    "center_stage.updater",
     "cv2_enumerate_cameras",
     "imageio_ffmpeg",
     "pyvirtualcam",

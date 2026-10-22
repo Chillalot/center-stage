@@ -59,7 +59,54 @@ jobs:
 
       - name: Lint shell scripts
         run: |
-          shellcheck packaging/*.sh packaging/preinst packaging/postinst packaging/prerm packaging/postrm tests/*.sh
+          shellcheck packaging/*.sh packaging/preinst packaging/postinst packaging/prerm packaging/postrm tests/*.sh packaging/appimage/AppRun packaging/appimage/build_appimage.sh
+
+  appimage:
+    name: Slim AppImage
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends             gettext             gir1.2-ayatanaappindicator3-0.1             gir1.2-gst-plugins-base-1.0             gir1.2-gstreamer-1.0             gir1.2-gtk-3.0             gstreamer1.0-plugins-base             gstreamer1.0-plugins-good             gstreamer1.0-tools             libcairo2             libegl1             libgl1             libgles2             python3-gi             python3-pil             python3-venv             zsync
+
+      - name: Build AppImage
+        run: |
+          python3 -m venv .venv-appimage
+          .venv-appimage/bin/python -m pip install --upgrade pip
+          PYTHON=.venv-appimage/bin/python packaging/appimage/build_appimage.sh
+
+      - name: Test AppImage payload
+        run: |
+          cd dist
+          appimage=$(find . -maxdepth 1 -name 'CenterStage-*.AppImage' ! -name '*.zsync' -print -quit)
+          "$appimage" --appimage-extract >/dev/null
+          APPDIR="$PWD/squashfs-root"           PYTHONPATH="$PWD/squashfs-root/usr/lib/center-stage/app:$PWD/squashfs-root/usr/lib/center-stage/vendor"           CENTER_STAGE_SHARE_DIR="$PWD/squashfs-root/usr/lib/center-stage"           CENTER_STAGE_LOCALE_DIR="$PWD/squashfs-root/usr/lib/center-stage/locale"           python3 - <<'PY'
+          import center_stage
+          import center_stage.engine as engine
+          import center_stage.gui
+          from center_stage.i18n import translator
+
+          assert center_stage.__version__ == "5.0.0"
+          assert engine.GST_AVAILABLE is True
+          assert translator("vi")("Settings") == "Cài đặt"
+          assert engine.model_path().exists()
+          assert engine.segmentation_model_path().exists()
+          print("AppImage payload OK")
+          PY
+
+      - name: Upload AppImage
+        uses: actions/upload-artifact@v4
+        with:
+          name: center-stage-appimage
+          path: |
+            dist/CenterStage-*.AppImage
+            dist/CenterStage-*.AppImage.zsync
+            dist/CenterStage-*.AppImage.sha256
+          if-no-files-found: error
 
   windows:
     name: Windows tests and build

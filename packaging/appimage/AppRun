@@ -1,0 +1,39 @@
+#!/bin/sh
+set -eu
+
+HERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+APPDIR=${APPDIR:-$HERE}
+APP_ROOT="$APPDIR/usr/lib/center-stage"
+PYTHON=${CENTER_STAGE_PYTHON:-python3}
+
+if ! command -v "$PYTHON" >/dev/null 2>&1; then
+    echo "Center Stage needs Python 3.12. Install python3 and try again." >&2
+    exit 1
+fi
+
+if ! "$PYTHON" -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 12) else 1)'; then
+    echo "Center Stage needs Python 3.12 or newer. Found: $("$PYTHON" --version 2>&1)" >&2
+    exit 1
+fi
+
+if ! "$PYTHON" -c 'import gi; gi.require_version("Gtk", "3.0"); gi.require_version("Gst", "1.0"); gi.require_version("AyatanaAppIndicator3", "0.1"); from gi.repository import Gtk, Gst, AyatanaAppIndicator3' >/dev/null 2>&1; then
+    cat >&2 <<'EOF'
+Center Stage AppImage needs the system GTK/GStreamer stack.
+Install it with:
+  sudo apt install python3-gi gir1.2-gtk-3.0 gir1.2-gstreamer-1.0 \
+    gir1.2-gst-plugins-base-1.0 gir1.2-ayatanaappindicator3-0.1 \
+    gstreamer1.0-plugins-base gstreamer1.0-plugins-good \
+    gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly \
+    gstreamer1.0-pipewire gstreamer1.0-libav
+EOF
+    exit 1
+fi
+
+export PYTHONNOUSERSITE=1
+export PYTHONPATH="$APP_ROOT/app:$APP_ROOT/vendor${PYTHONPATH:+:$PYTHONPATH}"
+export CENTER_STAGE_SHARE_DIR="$APP_ROOT"
+export CENTER_STAGE_LOCALE_DIR="$APP_ROOT/locale"
+export LD_LIBRARY_PATH="$APP_ROOT/vendor:$APP_ROOT/vendor/numpy.libs:$APP_ROOT/vendor/opencv_python_headless.libs${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+export XDG_DATA_DIRS="$APPDIR/usr/share:${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
+
+exec "$PYTHON" -m center_stage.app "$@"
