@@ -63,6 +63,7 @@ from .media import (
     save_jpeg,
     unique_media_path,
 )
+from .platform_paths import state_dir
 
 
 SERVICE_NAME = "center-stage-engine.service"
@@ -108,8 +109,7 @@ STATUS_MESSAGES = {
 
 
 def _configure_logging() -> logging.Logger:
-    state_home = Path(os.environ.get("XDG_STATE_HOME", Path.home() / ".local" / "state"))
-    log_path = state_home / "center-stage" / "gui.log"
+    log_path = state_dir() / "gui.log"
     log_path.parent.mkdir(parents=True, exist_ok=True)
     logger = logging.getLogger("center-stage.gui")
     if not logger.handlers:

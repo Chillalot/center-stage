@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import re
 import subprocess
 from dataclasses import dataclass
@@ -63,6 +64,8 @@ def discover_microphones(
     runner: Callable[[list[str]], subprocess.CompletedProcess[str]] | None = None,
 ) -> list[MicrophoneDevice]:
     """Discover real Pulse/PipeWire microphone sources, excluding output monitors."""
+    if os.name == "nt":
+        return discover_microphones_windows()
     result = (runner or _run)(["pactl", "list", "short", "sources"])
     if result.returncode != 0:
         return []
@@ -102,6 +105,8 @@ def discover_cameras(
     sys_class_dir: Path = Path("/sys/class/video4linux"),
     runner: Callable[[list[str]], subprocess.CompletedProcess[str]] = _run,
 ) -> list[CameraDevice]:
+    if os.name == "nt":
+        return discover_cameras_windows()
     candidates: Iterable[Path]
     if by_id_dir.is_dir():
         candidates = sorted(by_id_dir.glob("*-video-index0"))
@@ -145,6 +150,90 @@ def discover_cameras(
     return devices
 
 
+def discover_cameras_windows() -> list[CameraDevice]:
+    """Enumerate DirectShow/Media Foundation cameras without opening a stream."""
+    try:
+        import cv2
+
+        from cv2_enumerate_cameras import enumerate_cameras
+    except ImportError:
+        return _probe_windows_cameras()
+
+    devices: list[CameraDevice] = []
+    try:
+        infos = list(enumerate_cameras(cv2.CAP_MSMF))
+    except Exception:
+        infos = []
+    for info in infos:
+        index = int(getattr(info, "index", 0))
+        name = str(getattr(info, "name", "") or f"Camera {index}")
+        path = str(getattr(info, "path", "") or index)
+        serial = str(getattr(info, "pid", "") or getattr(info, "vid", "") or index)
+        devices.append(
+            CameraDevice(
+                camera_id=f"windows-{index}",
+                path=str(index),
+                resolved_path=str(index),
+                name=name,
+                serial=serial,
+                kind="usb",
+            )
+        )
+    return devices or _probe_windows_cameras()
+
+
+def _probe_windows_cameras() -> list[CameraDevice]:
+    try:
+        import cv2
+    except ImportError:
+        return []
+    devices: list[CameraDevice] = []
+    for index in range(10):
+        capture = cv2.VideoCapture(index, cv2.CAP_MSMF)
+        try:
+            if not capture.isOpened():
+                continue
+            devices.append(
+                CameraDevice(
+                    camera_id=f"windows-{index}",
+                    path=str(index),
+                    resolved_path=str(index),
+                    name=f"Camera {index}",
+                    serial=str(index),
+                    kind="usb",
+                )
+            )
+        finally:
+            capture.release()
+    return devices
+
+
+def discover_microphones_windows() -> list[MicrophoneDevice]:
+    try:
+        import sounddevice as sd
+    except (ImportError, OSError):
+        return []
+    try:
+        default_input = sd.default.device[0] if sd.default.device else -1
+        raw_devices = sd.query_devices()
+    except Exception:
+        return []
+    devices: list[MicrophoneDevice] = []
+    seen: set[str] = set()
+    for index, item in enumerate(raw_devices):
+        if int(item.get("max_input_channels", 0)) <= 0:
+            continue
+        name = str(item.get("name", "")).strip() or f"Microphone {index}"
+        if name in seen:
+            continue
+        seen.add(name)
+        devices.append(MicrophoneDevice(str(index), name))
+    if default_input is not None and int(default_input) >= 0:
+        default_id = str(default_input)
+        devices.sort(key=lambda item: item.microphone_id != default_id)
+    return devices
+
+
 def find_camera(camera_id: str | None) -> CameraDevice | None:
     if not camera_id:
         return None
@@ -163,6 +252,8 @@ def query_controls(
     device: str,
     runner: Callable[[list[str]], subprocess.CompletedProcess[str]] = _run,
 ) -> dict[str, CameraControl]:
+    if os.name == "nt":
+        return {}
     result = runner(["v4l2-ctl", "-d", device, "--list-ctrls"])
     if result.returncode != 0:
         return {}
@@ -189,6 +280,8 @@ def set_normalized_control(
     normalized: int,
     runner: Callable[[list[str]], subprocess.CompletedProcess[str]] = _run,
 ) -> bool:
+    if os.name == "nt":
+        return False
     raw = control.from_normalized(normalized)
     result = runner(
         ["v4l2-ctl", "-d", device, f"--set-ctrl={control.name}={raw}"]
@@ -197,6 +290,8 @@ def set_normalized_control(
 
 
 def apply_saved_controls(device: CameraDevice, values: dict[str, int]) -> dict[str, bool]:
+    if os.name == "nt":
+        return {name: False for name in CONTROL_NAMES}
     available = query_controls(device.path)
     return {
         name: (

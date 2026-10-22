@@ -11,7 +11,6 @@ from typing import Sequence
 from . import __version__
 from .config import load_config
 from .devices import CameraDevice, discover_cameras, find_camera
-from .engine import EngineError, acquire_engine_lock, run_pipeline
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -58,6 +57,18 @@ def resolve_camera(value: str | None, selected_id: str | None) -> CameraDevice:
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = parse_args(argv)
+    if os.name == "nt":
+        try:
+            from .engine_win import EngineError, acquire_engine_lock, run_pipeline
+        except ImportError:
+            print(
+                "Center Stage error [backend_missing]: the Windows backend is not installed",
+                file=sys.stderr,
+            )
+            return 1
+    else:
+        from .engine import EngineError, acquire_engine_lock, run_pipeline
+
     lock = None
     try:
         lock = acquire_engine_lock()
