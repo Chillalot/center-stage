@@ -10,6 +10,14 @@ from copy import deepcopy
 from pathlib import Path
 from typing import Any
 
+from .platform_paths import (
+    config_dir,
+    default_output_device,
+    pictures_dir,
+    runtime_dir as platform_runtime_dir,
+    videos_dir,
+)
+
 CONTROL_NAMES = ("brightness", "contrast", "saturation", "hue")
 
 DEFAULT_CONFIG: dict[str, Any] = {
@@ -27,10 +35,13 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "studio_light_strength": 50,
     "selected_microphone_id": None,
     "microphone_muted": False,
+    "check_for_updates": True,
+    "update_channel": "stable",
+    "autostart": False,
     "pictures_folder": "",
     "videos_folder": "",
     "media_folder": "",
-    "output_device": "/dev/video10",
+    "output_device": default_output_device(),
     "width": 1920,
     "height": 1080,
     "fps": 30.0,
@@ -39,15 +50,11 @@ DEFAULT_CONFIG: dict[str, Any] = {
 
 
 def config_path() -> Path:
-    base = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config"))
-    return base / "center-stage" / "config.json"
+    return config_dir() / "config.json"
 
 
 def runtime_dir() -> Path:
-    base = os.environ.get("XDG_RUNTIME_DIR")
-    if base:
-        return Path(base) / "center-stage"
-    return Path(f"/run/user/{os.getuid()}") / "center-stage"
+    return platform_runtime_dir()
 
 
 def status_path() -> Path:
@@ -88,6 +95,10 @@ def load_config(path: Path | None = None) -> dict[str, Any]:
     result["portrait_strength"] = max(0, min(100, int(result["portrait_strength"])))
     result["studio_light_strength"] = max(0, min(100, int(result["studio_light_strength"])))
     result["microphone_muted"] = bool(result["microphone_muted"])
+    result["check_for_updates"] = bool(result["check_for_updates"])
+    result["autostart"] = bool(result["autostart"])
+    if result["update_channel"] not in {"stable", "beta"}:
+        result["update_channel"] = "stable"
     result["gallery_collapsed"] = bool(result["gallery_collapsed"])
     for folder_key in ("pictures_folder", "videos_folder", "media_folder"):
         if not isinstance(result[folder_key], str):
@@ -97,12 +108,12 @@ def load_config(path: Path | None = None) -> dict[str, Any]:
 
 def pictures_folder(config: dict[str, Any]) -> Path:
     configured = str(config.get("pictures_folder") or "").strip()
-    return Path(configured).expanduser() if configured else Path.home() / "Pictures"
+    return Path(configured).expanduser() if configured else pictures_dir()
 
 
 def videos_folder(config: dict[str, Any]) -> Path:
     configured = str(config.get("videos_folder") or "").strip()
-    return Path(configured).expanduser() if configured else Path.home() / "Videos"
+    return Path(configured).expanduser() if configured else videos_dir()
 
 
 def media_folders(config: dict[str, Any]) -> tuple[Path, ...]:
@@ -130,6 +141,10 @@ def save_config(config: dict[str, Any], path: Path | None = None) -> None:
         data["theme"] = "light"
     if data["capture_mode"] not in {"photo", "four_up", "video"}:
         data["capture_mode"] = "photo"
+    if data["update_channel"] not in {"stable", "beta"}:
+        data["update_channel"] = "stable"
+    data["check_for_updates"] = bool(data["check_for_updates"])
+    data["autostart"] = bool(data["autostart"])
     for folder_key in ("pictures_folder", "videos_folder", "media_folder"):
         if not isinstance(data[folder_key], str):
             data[folder_key] = ""

@@ -15,10 +15,16 @@ from typing import Callable
 import cv2
 import numpy as np
 
-import gi
+try:
+    import gi
 
-gi.require_version("Gst", "1.0")
-from gi.repository import Gst  # noqa: E402
+    gi.require_version("Gst", "1.0")
+    from gi.repository import Gst  # noqa: E402
+
+    GST_AVAILABLE = True
+except (ImportError, AttributeError, ValueError):
+    Gst = None  # type: ignore[assignment]
+    GST_AVAILABLE = False
 
 
 MEDIA_SUFFIXES = {".jpg", ".jpeg", ".mp4"}
@@ -117,6 +123,8 @@ def format_duration(seconds: int) -> str:
 
 def recording_encoder_candidates() -> list[tuple[str, str]]:
     """Return quality-oriented encoders in preferred runtime order."""
+    if Gst is None:
+        return []
     Gst.init(None)
     candidates: list[tuple[str, str]] = []
     if Gst.ElementFactory.find("vaapih264enc") is not None:
@@ -165,6 +173,8 @@ class VideoRecorder:
     def start(self, destination: Path, microphone_id: str | None, muted: bool) -> None:
         if self.pipeline is not None:
             raise RuntimeError("recording already active")
+        if Gst is None:
+            raise RuntimeError("GStreamer recording is not available on this platform")
         Gst.init(None)
         self.recovery_folder.mkdir(parents=True, exist_ok=True)
         fd, temporary = tempfile.mkstemp(prefix="center-stage-", suffix=".mp4.part", dir=self.recovery_folder)

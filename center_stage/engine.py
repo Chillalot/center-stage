@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import fcntl
 import json
 import os
 import re
@@ -17,18 +16,32 @@ from pathlib import Path
 from typing import Any, Sequence
 
 import cv2
-import gi
 import mediapipe as mp
 import numpy as np
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 
-gi.require_version("Gst", "1.0")
-from gi.repository import Gst  # noqa: E402
+try:
+    import fcntl
+except ImportError:  # Windows
+    fcntl = None  # type: ignore[assignment]
+
+try:
+    import gi
+
+    gi.require_version("Gst", "1.0")
+    from gi.repository import Gst  # noqa: E402
+
+    GST_AVAILABLE = True
+except (ImportError, AttributeError, ValueError):  # Windows has no PyGObject
+    gi = None  # type: ignore[assignment]
+    Gst = None  # type: ignore[assignment]
+    GST_AVAILABLE = False
 
 from .config import camera_control_values, load_config, preview_socket_path, runtime_dir, write_status
 from .devices import CameraDevice, apply_saved_controls, find_camera
 from .framing import AutoFramer, FaceBox, clamp, crop_and_resize
+from .platform_paths import bundled_roots
 
 OUTPUT_WIDTH = 1920
 OUTPUT_HEIGHT = 1080
@@ -43,10 +56,11 @@ SEGMENTATION_INPUT_WIDTH = 256
 EFFECTS_WIDTH = 640
 CONFIG_POLL_INTERVAL = 0.15
 MIN_DETECTION_CONFIDENCE = 0.5
-CAMERA_START_TIMEOUT_NS = 5 * Gst.SECOND
+CAMERA_START_TIMEOUT_NS = 5 * (Gst.SECOND if Gst is not None else 1_000_000_000)
 CAMERA_STALL_SECONDS = 2.0
 
-Gst.init(None)
+if Gst is not None:
+    Gst.init(None)
 cv2.setNumThreads(2)
 
 
@@ -257,11 +271,12 @@ class FpsCounter:
         return self.value
 
 
+def _model_candidates(filename: str) -> tuple[Path, ...]:
+    return tuple(root / filename for root in bundled_roots())
+
+
 def model_path() -> Path:
-    candidates = (
-        Path(__file__).resolve().parent.parent / "blaze_face_short_range.tflite",
-        Path("/opt/center-stage/share/blaze_face_short_range.tflite"),
-    )
+    candidates = _model_candidates("blaze_face_short_range.tflite")
     for candidate in candidates:
         if candidate.is_file():
             return candidate
@@ -269,10 +284,7 @@ def model_path() -> Path:
 
 
 def segmentation_model_path() -> Path:
-    candidates = (
-        Path(__file__).resolve().parent.parent / "selfie_segmenter_landscape.tflite",
-        Path("/opt/center-stage/share/selfie_segmenter_landscape.tflite"),
-    )
+    candidates = _model_candidates("selfie_segmenter_landscape.tflite")
     for candidate in candidates:
         if candidate.is_file():
             return candidate
@@ -361,6 +373,11 @@ class PipeWireCameraCapture:
         self.mode: InputCaps | None = None
 
     def start(self) -> tuple[np.ndarray, InputCaps]:
+        if Gst is None:
+            raise EngineError(
+                "pipewire_camera_unavailable",
+                "The PipeWire GStreamer backend is not available on this platform",
+            )
         self.monitor.add_filter("Video/Source", None)
         if not self.monitor.start():
             raise EngineError("pipewire_camera_unavailable", "Cannot start PipeWire camera monitor")
@@ -564,6 +581,11 @@ class V4L2VirtualOutput:
         self.frame_index = 0
 
     def start(self, first_frame: np.ndarray) -> None:
+        if Gst is None:
+            raise EngineError(
+                "output_pipeline_failed",
+                "The v4l2loopback GStreamer backend is not available on this platform",
+            )
         self._validate_device()
         self._reset_loopback_controls()
         self.preview_socket.parent.mkdir(parents=True, exist_ok=True)
@@ -1288,6 +1310,18 @@ def acquire_engine_lock():
     directory = runtime_dir()
     directory.mkdir(parents=True, exist_ok=True)
     handle = (directory / "engine.lock").open("w", encoding="utf-8")
+    if fcntl is None:
+        import msvcrt
+
+        try:
+            handle.write("center-stage\n")
+            handle.flush()
+            handle.seek(0)
+            msvcrt.locking(handle.fileno(), msvcrt.LK_NBLCK, 1)
+        except OSError as error:
+            handle.close()
+            raise EngineError("already_running", "Center Stage is already running") from error
+        return handle
     try:
         fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
     except BlockingIOError as error:

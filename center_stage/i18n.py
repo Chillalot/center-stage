@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import gettext
+import os
 from pathlib import Path
 from typing import Callable, Iterable
 
@@ -10,10 +11,13 @@ DOMAIN = "center-stage"
 
 
 def locale_directories() -> tuple[Path, ...]:
-    return (
-        Path(__file__).resolve().parent.parent / "locale",
-        Path("/usr/share/locale"),
-    )
+    directories: list[Path] = []
+    override = os.environ.get("CENTER_STAGE_LOCALE_DIR")
+    if override:
+        directories.append(Path(override).expanduser())
+    package_root = Path(__file__).resolve().parent.parent
+    directories.extend((package_root / "locale", Path("/usr/share/locale")))
+    return tuple(directories)
 
 
 def translator(
