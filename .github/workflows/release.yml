@@ -50,6 +50,7 @@ jobs:
           python3 -m venv --system-site-packages .venv
           .venv/bin/python -m pip install --upgrade pip
           .venv/bin/python -m pip install -r requirements.txt
+          .venv/bin/python -m pip install --no-deps mediapipe==0.10.35
           .venv/bin/python -m unittest discover -s tests -v
           msgfmt --check --check-format -o /dev/null po/vi.po
 
