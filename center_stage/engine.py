@@ -853,7 +853,7 @@ def create_person_segmenter(path: Path) -> vision.ImageSegmenter:
 
     try:
         return vision.ImageSegmenter.create_from_options(options(python.BaseOptions.Delegate.GPU))
-    except (RuntimeError, ValueError):
+    except (RuntimeError, ValueError, OSError):
         return vision.ImageSegmenter.create_from_options(options(python.BaseOptions.Delegate.CPU))
 
 
@@ -882,7 +882,7 @@ class LivePersonSegmenter:
         self.gpu_enabled = True
         try:
             self._segmenter = self._create(path, python.BaseOptions.Delegate.GPU)
-        except (RuntimeError, ValueError):
+        except (RuntimeError, ValueError, OSError):
             self.gpu_enabled = False
             self._segmenter = self._create(path, python.BaseOptions.Delegate.CPU)
 

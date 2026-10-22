@@ -64,7 +64,7 @@ def discover_microphones(
     runner: Callable[[list[str]], subprocess.CompletedProcess[str]] | None = None,
 ) -> list[MicrophoneDevice]:
     """Discover real Pulse/PipeWire microphone sources, excluding output monitors."""
-    if os.name == "nt":
+    if os.name == "nt" and runner is None:
         return discover_microphones_windows()
     result = (runner or _run)(["pactl", "list", "short", "sources"])
     if result.returncode != 0:
@@ -105,7 +105,12 @@ def discover_cameras(
     sys_class_dir: Path = Path("/sys/class/video4linux"),
     runner: Callable[[list[str]], subprocess.CompletedProcess[str]] = _run,
 ) -> list[CameraDevice]:
-    if os.name == "nt":
+    if (
+        os.name == "nt"
+        and runner is _run
+        and by_id_dir == Path("/dev/v4l/by-id")
+        and sys_class_dir == Path("/sys/class/video4linux")
+    ):
         return discover_cameras_windows()
     candidates: Iterable[Path]
     if by_id_dir.is_dir():
@@ -252,7 +257,7 @@ def query_controls(
     device: str,
     runner: Callable[[list[str]], subprocess.CompletedProcess[str]] = _run,
 ) -> dict[str, CameraControl]:
-    if os.name == "nt":
+    if os.name == "nt" and runner is _run:
         return {}
     result = runner(["v4l2-ctl", "-d", device, "--list-ctrls"])
     if result.returncode != 0:
@@ -280,7 +285,7 @@ def set_normalized_control(
     normalized: int,
     runner: Callable[[list[str]], subprocess.CompletedProcess[str]] = _run,
 ) -> bool:
-    if os.name == "nt":
+    if os.name == "nt" and runner is _run:
         return False
     raw = control.from_normalized(normalized)
     result = runner(

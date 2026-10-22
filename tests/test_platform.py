@@ -11,6 +11,7 @@ from center_stage import platform_paths
 from center_stage.devices import CameraDevice, discover_cameras_windows, discover_microphones_windows
 
 
+@unittest.skipIf(os.name == "nt", "Linux XDG path tests")
 class PlatformPathTests(unittest.TestCase):
     def test_linux_config_override(self):
         with tempfile.TemporaryDirectory() as directory:
