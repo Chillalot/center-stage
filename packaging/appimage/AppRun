@@ -1,7 +1,8 @@
 #!/bin/sh
 set -eu
 
-HERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+unset CDPATH
+HERE=$(cd -- "$(dirname -- "$0")" && pwd)
 APPDIR=${APPDIR:-$HERE}
 APP_ROOT="$APPDIR/usr/lib/center-stage"
 PYTHON=${CENTER_STAGE_PYTHON:-python3}

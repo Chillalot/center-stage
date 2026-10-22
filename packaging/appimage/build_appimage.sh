@@ -8,7 +8,8 @@ set -eu
 # Ubuntu 24.04 and bundles only the Python packages that are not part of that
 # stack (OpenCV, NumPy, MediaPipe, and their dependencies).
 
-ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)
+unset CDPATH
+ROOT=$(cd -- "$(dirname -- "$0")/../.." && pwd)
 VERSION=$(tr -d '[:space:]' <"$ROOT/VERSION")
 ARCH=${ARCH:-x86_64}
 BUILD_PYTHON=${PYTHON:-python3}
@@ -79,7 +80,7 @@ install -m 0644 "$ROOT/packaging/center-stage.svg" \
     "$APPDIR/usr/share/icons/hicolor/scalable/apps/center-stage.svg"
 cat >"$APPDIR/usr/bin/center-stage" <<'EOF'
 #!/bin/sh
-APPDIR=$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)
+APPDIR=$(cd -- "$(dirname -- "$0")/../.." && pwd)
 exec "$APPDIR/AppRun" "$@"
 EOF
 chmod 0755 "$APPDIR/usr/bin/center-stage"
@@ -87,7 +88,7 @@ chmod 0755 "$APPDIR/usr/bin/center-stage"
 # Keep the image slim without removing runtime libraries or licenses.
 find "$VENDOR" -type d -name __pycache__ -prune -exec rm -rf {} +
 find "$APP_DIR" -type d -name __pycache__ -prune -exec rm -rf {} +
-rm -rf "$VENDOR/bin"
+rm -rf "${VENDOR:?}/bin"
 rm -rf "$VENDOR/matplotlib/mpl-data/sample_data" \
     "$VENDOR/matplotlib/mpl-data/images" \
     "$VENDOR/matplotlib/tests" \
