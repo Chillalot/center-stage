@@ -39,7 +39,7 @@ All release assets are published on the
 | [`CenterStage-x86_64.AppImage`](https://github.com/Chillalot/center-stage/releases/latest/download/CenterStage-x86_64.AppImage) | Linux | Slim portable build. Uses the system Python 3.12, GTK 3, GStreamer, and PipeWire stack. |
 | [`CenterStage-Setup.exe`](https://github.com/Chillalot/center-stage/releases/latest/download/CenterStage-Setup.exe) | Windows | **Beta.** Per-user installer; OBS Virtual Camera driver required. |
 | [`CenterStage-win64.zip`](https://github.com/Chillalot/center-stage/releases/latest/download/CenterStage-win64.zip) | Windows | **Beta.** Portable ZIP; extract and run `CenterStage.exe`. |
-| [`SHA256SUMS.txt`](https://github.com/Chillalot/center-stage/releases/latest/download/SHA256SUMS.txt) | All | SHA-256 checksums for every release asset. |
+| [`SHA256SUMS.txt`](https://github.com/Chillalot/center-stage/releases/latest/download/SHA256SUMS.txt) | All | SHA-256 checksums for the release binaries. |
 
 ### Verify your download
 
