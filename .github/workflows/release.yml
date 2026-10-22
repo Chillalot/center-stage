@@ -138,7 +138,9 @@ jobs:
           set -euo pipefail
           version=$(tr -d '[:space:]' < VERSION)
           mkdir -p release-assets
-          find downloaded/center-stage-linux -name 'center-stage_*.deb' -exec cp {} release-assets/ \;
+          deb=$(find downloaded/center-stage-linux -name 'center-stage_*.deb' -print -quit)
+          cp "$deb" release-assets/
+          cp "$deb" release-assets/center-stage_amd64.deb
           appimage=$(find downloaded/center-stage-linux -maxdepth 1 -name 'CenterStage-*.AppImage' -print -quit)
           cp "$appimage" release-assets/CenterStage-x86_64.AppImage
           if [ -f "$appimage.zsync" ]; then
@@ -170,7 +172,7 @@ jobs:
 
           ### Downloads
 
-          - **Linux (.deb)** — \`center-stage_${version}_amd64.deb\`
+          - **Linux (.deb)** — \`center-stage_amd64.deb\` (versioned name is also attached)
           - **Linux (slim AppImage)** — \`CenterStage-x86_64.AppImage\` (requires Python 3.12, GTK 3, GStreamer, and PipeWire)
           - **Windows installer (Beta)** — \`CenterStage-Setup.exe\`
           - **Windows portable (Beta)** — \`CenterStage-win64.zip\`
