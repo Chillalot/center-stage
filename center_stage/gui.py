@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import logging.handlers
 import os
+import subprocess
 import sys
 import threading
 import time
@@ -376,6 +377,8 @@ class PhotoBoothWindow(Gtk.ApplicationWindow):
         self._camera_requested = True
         self._initial_autostart_done = False
         self._service_action_pending = False
+        self._pending_service_action: str | None = None
+        self._engine_process: subprocess.Popen[bytes] | None = None
         self._transition_until = 0.0
         self._device_generation = 0
         self._control_generation = 0
@@ -1563,9 +1566,22 @@ class PhotoBoothWindow(Gtk.ApplicationWindow):
                 self._service_action("start")
 
     def _service_action(self, action: str, callback: Any | None = None) -> None:
+        if self._engine_process is not None and action in {"stop", "restart"}:
+            self._stop_engine_process()
+            if action == "stop":
+                self._service_action_pending = False
+                self._pending_service_action = None
+                self._transition_until = 0.0
+                self.engine_state = "stopped"
+                self._set_visible_status("stopped", "stopped")
+                if callback:
+                    callback(True)
+                return
+            action = "start"
         if self._service_action_pending and action != "stop":
             return
         self._service_action_pending = True
+        self._pending_service_action = action
         self.engine_state = "restarting" if action == "restart" else "starting" if action == "start" else "stopped"
         self._transition_until = time.monotonic() + 6.0
         LOGGER.info("Engine action=%s", action)
@@ -1573,6 +1589,37 @@ class PhotoBoothWindow(Gtk.ApplicationWindow):
             self._run_systemctl("reset-failed", lambda _ok: self._run_systemctl(action, lambda ok: self._finish_service_action(ok, callback)))
         else:
             self._run_systemctl(action, lambda ok: self._finish_service_action(ok, callback))
+
+    def _start_engine_process(self) -> bool:
+        """Run the engine directly for portable/AppImage installs without a unit."""
+        try:
+            environment = os.environ.copy()
+            self._engine_process = subprocess.Popen(
+                [sys.executable, "-m", "center_stage.cli"],
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                env=environment,
+            )
+        except OSError as error:
+            LOGGER.error("Cannot start the portable engine: %s", error)
+            self._engine_process = None
+            return False
+        LOGGER.info("Portable engine started pid=%s", self._engine_process.pid)
+        return True
+
+    def _stop_engine_process(self) -> None:
+        process, self._engine_process = self._engine_process, None
+        if process is None:
+            return
+        if process.poll() is None:
+            process.terminate()
+            try:
+                process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                process.kill()
+                process.wait(timeout=5)
+        LOGGER.info("Portable engine stopped pid=%s", process.pid)
 
     def _run_systemctl(self, action: str, callback: Any) -> None:
         try:
@@ -1590,6 +1637,14 @@ class PhotoBoothWindow(Gtk.ApplicationWindow):
 
     def _finish_service_action(self, succeeded: bool, callback: Any | None) -> None:
         if self._destroyed:
+            return
+        action, self._pending_service_action = self._pending_service_action, None
+        if not succeeded and action in {"start", "restart"} and self._start_engine_process():
+            self._service_action_pending = False
+            self._transition_until = time.monotonic() + 6.0
+            self.engine_state = "starting"
+            if callback:
+                callback(True)
             return
         self._service_action_pending = False
         if not succeeded:
@@ -1740,8 +1795,15 @@ CenterStageApplication = AppShell
 CenterStageWindow = PhotoBoothWindow
 
 
-def main() -> int:
-    return AppShell().run(sys.argv)
+def main(argv: list[str] | None = None) -> int:
+    args = list(sys.argv if argv is None else argv)
+    if "--version" in args:
+        print(f"Center Stage {__version__}")
+        return 0
+    if "--help" in args or "-h" in args:
+        print("Usage: center-stage [--version] [--help]")
+        return 0
+    return AppShell().run(args)
 
 
 if __name__ == "__main__":

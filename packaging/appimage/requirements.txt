@@ -1,0 +1,4 @@
+# Python packages bundled inside the slim AppImage. The system provides
+# Python 3.12, GTK 3, GStreamer, and PipeWire.
+-r ../runtime-requirements.txt
+matplotlib==3.11.1

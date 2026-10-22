@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.chillalot.CenterStage</id>
+  <metadata_license>MIT</metadata_license>
+  <project_license>MIT</project_license>
+  <name>Center Stage</name>
+  <summary>Auto-framing virtual camera for calls and recordings</summary>
+  <description>
+    <p>
+      Center Stage keeps you centered in video calls using face tracking,
+      automatic framing, portrait blur, studio lighting, photo capture, and
+      video recording.
+    </p>
+  </description>
+  <launchable type="desktop-id">center-stage.desktop</launchable>
+  <url type="homepage">https://github.com/Chillalot/center-stage</url>
+  <url type="bugtracker">https://github.com/Chillalot/center-stage/issues</url>
+  <developer_name>Center Stage contributors</developer_name>
+  <releases>
+    <release version="5.0.0" date="2026-10-22"/>
+  </releases>
+  <content_rating type="oars-1.1"/>
+</component>
