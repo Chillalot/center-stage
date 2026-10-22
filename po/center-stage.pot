@@ -343,3 +343,139 @@ msgstr ""
 #: center_stage/gui.py:1621
 msgid "Connect Camera"
 msgstr ""
+
+#: center_stage/gui_qt.py
+msgid "Settings"
+msgstr ""
+
+#: center_stage/gui_qt.py
+msgid "Settings…"
+msgstr ""
+
+#: center_stage/gui_qt.py
+msgid "Automatic"
+msgstr ""
+
+#: center_stage/gui_qt.py
+msgid "Default microphone"
+msgstr ""
+
+#: center_stage/gui_qt.py
+msgid "Pictures folder"
+msgstr ""
+
+#: center_stage/gui_qt.py
+msgid "Videos folder"
+msgstr ""
+
+#: center_stage/gui_qt.py
+msgid "Check for updates automatically"
+msgstr ""
+
+#: center_stage/gui_qt.py
+msgid "Start Center Stage when I sign in"
+msgstr ""
+
+#: center_stage/gui_qt.py
+msgid "Browse…"
+msgstr ""
+
+#: center_stage/gui_qt.py
+msgid "Choose folder"
+msgstr ""
+
+#: center_stage/gui_qt.py
+msgid "Camera on"
+msgstr ""
+
+#: center_stage/gui_qt.py
+msgid "Camera off"
+msgstr ""
+
+#: center_stage/gui_qt.py
+msgid "Take photo"
+msgstr ""
+
+#: center_stage/gui_qt.py
+msgid "Record video"
+msgstr ""
+
+#: center_stage/gui_qt.py
+msgid "Check for updates…"
+msgstr ""
+
+#: center_stage/gui_qt.py
+msgid "Dark"
+msgstr ""
+
+#: center_stage/gui_qt.py
+msgid "Light"
+msgstr ""
+
+#: center_stage/gui_qt.py
+msgid "Mirror"
+msgstr ""
+
+#: center_stage/gui_qt.py
+msgid "No camera found"
+msgstr ""
+
+#: center_stage/gui_qt.py
+msgid "Camera is off"
+msgstr ""
+
+#: center_stage/gui_qt.py
+msgid "Looking for a face…"
+msgstr ""
+
+#: center_stage/gui_qt.py
+msgid "OBS Virtual Camera is not available"
+msgstr ""
+
+#: center_stage/gui_qt.py
+msgid "The camera is not ready yet"
+msgstr ""
+
+#: center_stage/gui_qt.py
+msgid "Saved {name}"
+msgstr ""
+
+#: center_stage/gui_qt.py
+msgid "Recording…"
+msgstr ""
+
+#: center_stage/gui_qt.py
+msgid "Stop"
+msgstr ""
+
+#: center_stage/gui_qt.py
+msgid "Take 4 photos"
+msgstr ""
+
+#: center_stage/gui_qt.py
+msgid "Record"
+msgstr ""
+
+#: center_stage/gui_qt.py
+msgid "Recording could not be saved"
+msgstr ""
+
+#: center_stage/gui_qt.py
+msgid "Update checking is not available in this build."
+msgstr ""
+
+#: center_stage/gui_qt.py
+msgid "Checking for updates…"
+msgstr ""
+
+#: center_stage/gui_qt.py
+msgid "Center Stage is up to date"
+msgstr ""
+
+#: center_stage/gui_qt.py
+msgid "Center Stage is up to date."
+msgstr ""
+
+#: center_stage/gui_qt.py
+msgid "Center Stage {version} is available."
+msgstr ""

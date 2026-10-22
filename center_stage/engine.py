@@ -40,6 +40,7 @@ except (ImportError, AttributeError, ValueError):  # Windows has no PyGObject
 
 from .config import camera_control_values, load_config, preview_socket_path, runtime_dir, write_status
 from .devices import CameraDevice, apply_saved_controls, find_camera
+from .errors import EngineError
 from .framing import AutoFramer, FaceBox, clamp, crop_and_resize
 from .platform_paths import bundled_roots
 
@@ -56,7 +57,8 @@ SEGMENTATION_INPUT_WIDTH = 256
 EFFECTS_WIDTH = 640
 CONFIG_POLL_INTERVAL = 0.15
 MIN_DETECTION_CONFIDENCE = 0.5
-CAMERA_START_TIMEOUT_NS = 5 * (Gst.SECOND if Gst is not None else 1_000_000_000)
+NANOSECONDS_PER_SECOND = 1_000_000_000
+CAMERA_START_TIMEOUT_NS = 5 * NANOSECONDS_PER_SECOND
 CAMERA_STALL_SECONDS = 2.0
 
 if Gst is not None:
@@ -221,12 +223,6 @@ class AdaptiveQualityGovernor:
         if self._candidate_count >= 2:
             self.level = candidate
         return self.level
-
-
-class EngineError(RuntimeError):
-    def __init__(self, code: str, message: str):
-        super().__init__(message)
-        self.code = code
 
 
 @dataclass(frozen=True)
@@ -498,7 +494,7 @@ def raw_bgr_payload(frame: np.ndarray) -> bytes:
 
 
 def output_timestamps(frame_index: int) -> tuple[int, int]:
-    duration = Gst.SECOND // OUTPUT_FPS
+    duration = NANOSECONDS_PER_SECOND // OUTPUT_FPS
     return frame_index * duration, duration
 
 
@@ -853,7 +849,7 @@ def create_person_segmenter(path: Path) -> vision.ImageSegmenter:
 
     try:
         return vision.ImageSegmenter.create_from_options(options(python.BaseOptions.Delegate.GPU))
-    except (RuntimeError, ValueError):
+    except (RuntimeError, ValueError, OSError):
         return vision.ImageSegmenter.create_from_options(options(python.BaseOptions.Delegate.CPU))
 
 
@@ -882,7 +878,7 @@ class LivePersonSegmenter:
         self.gpu_enabled = True
         try:
             self._segmenter = self._create(path, python.BaseOptions.Delegate.GPU)
-        except (RuntimeError, ValueError):
+        except (RuntimeError, ValueError, OSError):
             self.gpu_enabled = False
             self._segmenter = self._create(path, python.BaseOptions.Delegate.CPU)
 

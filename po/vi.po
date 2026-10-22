@@ -1,3 +1,4 @@
+#
 msgid ""
 msgstr ""
 "Project-Id-Version: Center Stage 5.0.0\n"
@@ -341,117 +342,138 @@ msgstr "Xóa tệp media này?"
 msgid "Connect Camera"
 msgstr "Kết nối camera"
 
-#~ msgid "Media Folder…"
-#~ msgstr "Thư mục media…"
+#: center_stage/gui_qt.py
+msgid "Settings"
+msgstr "Cài đặt"
 
-#~ msgid "Choose Media Folder"
-#~ msgstr "Chọn thư mục media"
+#: center_stage/gui_qt.py
+msgid "Settings…"
+msgstr "Cài đặt…"
 
-#~ msgid "Capture"
-#~ msgstr "Chụp"
+#: center_stage/gui_qt.py
+msgid "Automatic"
+msgstr "Tự động"
 
-#~ msgid "Record"
-#~ msgstr "Quay"
+#: center_stage/gui_qt.py
+msgid "Default microphone"
+msgstr "Micro mặc định"
 
-#~ msgid "Stop"
-#~ msgstr "Dừng"
+#: center_stage/gui_qt.py
+msgid "Pictures folder"
+msgstr "Thư mục ảnh"
 
-#~ msgid "Enabled"
-#~ msgstr "Bật"
+#: center_stage/gui_qt.py
+msgid "Videos folder"
+msgstr "Thư mục video"
 
-#~ msgid "Image Adjustments…"
-#~ msgstr "Điều chỉnh hình ảnh…"
+#: center_stage/gui_qt.py
+msgid "Check for updates automatically"
+msgstr "Tự động kiểm tra cập nhật"
 
-#~ msgid "Close"
-#~ msgstr "Đóng"
+#: center_stage/gui_qt.py
+msgid "Start Center Stage when I sign in"
+msgstr "Khởi động Center Stage khi đăng nhập"
 
-#~ msgid "Studio"
-#~ msgstr "Studio"
+#: center_stage/gui_qt.py
+msgid "Browse…"
+msgstr "Chọn…"
 
-#~ msgid "Calls"
-#~ msgstr "Cuộc gọi"
+#: center_stage/gui_qt.py
+msgid "Choose folder"
+msgstr "Chọn thư mục"
 
-#~ msgid "Connect a camera to make Center Stage available to Meet and Vesktop."
-#~ msgstr "Kết nối camera để dùng Center Stage trong Meet và Vesktop."
+#: center_stage/gui_qt.py
+msgid "Camera on"
+msgstr "Bật camera"
 
-#~ msgid "Manual Framing"
-#~ msgstr "Căn khung thủ công"
+#: center_stage/gui_qt.py
+msgid "Camera off"
+msgstr "Tắt camera"
 
-#~ msgid "Preview"
-#~ msgstr "Xem trước"
+#: center_stage/gui_qt.py
+msgid "Take photo"
+msgstr "Chụp ảnh"
 
-#~ msgid "Recenter"
-#~ msgstr "Căn giữa lại"
+#: center_stage/gui_qt.py
+msgid "Record video"
+msgstr "Quay video"
 
-#~ msgid "Interface preview only — this effect does not change the video yet."
-#~ msgstr "Chỉ xem trước giao diện — hiệu ứng này chưa thay đổi video."
+#: center_stage/gui_qt.py
+msgid "Check for updates…"
+msgstr "Kiểm tra cập nhật…"
 
-#~ msgid "Mirror Output"
-#~ msgstr "Lật hình đầu ra"
+#: center_stage/gui_qt.py
+msgid "Dark"
+msgstr "Tối"
 
-#~ msgid ""
-#~ "Photo, 4-up, video, and the filmstrip will use the same camera stage."
-#~ msgstr "Ảnh, 4 ảnh, video và dải ảnh sẽ dùng chung một khung camera."
+#: center_stage/gui_qt.py
+msgid "Light"
+msgstr "Sáng"
 
-#~ msgid "Filmstrip"
-#~ msgstr "Dải ảnh"
+#: center_stage/gui_qt.py
+msgid "Mirror"
+msgstr "Gương"
 
-#~ msgid "Recent Calls"
-#~ msgstr "Cuộc gọi gần đây"
+#: center_stage/gui_qt.py
+msgid "No camera found"
+msgstr "Không tìm thấy camera"
 
-#~ msgid "No recent calls"
-#~ msgstr "Không có cuộc gọi gần đây"
+#: center_stage/gui_qt.py
+msgid "Camera is off"
+msgstr "Camera đang tắt"
 
-#~ msgid "Calls are coming soon"
-#~ msgstr "Cuộc gọi sắp ra mắt"
+#: center_stage/gui_qt.py
+msgid "Looking for a face…"
+msgstr "Đang tìm khuôn mặt…"
 
-#~ msgid "Start one-to-one and group calls from this workspace."
-#~ msgstr "Bắt đầu cuộc gọi một-một và cuộc gọi nhóm từ không gian này."
+#: center_stage/gui_qt.py
+msgid "OBS Virtual Camera is not available"
+msgstr "OBS Virtual Camera không khả dụng"
 
-#~ msgid "New Call"
-#~ msgstr "Cuộc gọi mới"
+#: center_stage/gui_qt.py
+msgid "The camera is not ready yet"
+msgstr "Camera chưa sẵn sàng"
 
-#~ msgid "Integrated camera"
-#~ msgstr "Camera tích hợp"
+#: center_stage/gui_qt.py
+msgid "Saved {name}"
+msgstr "Đã lưu {name}"
 
-#~ msgid "External USB camera"
-#~ msgstr "Webcam USB rời"
+#: center_stage/gui_qt.py
+msgid "Recording…"
+msgstr "Đang quay…"
 
-#~ msgid "Checking camera controls…"
-#~ msgstr "Đang kiểm tra điều khiển camera…"
+#: center_stage/gui_qt.py
+msgid "Stop"
+msgstr "Dừng"
 
-#~ msgid "Not supported by this camera"
-#~ msgstr "Camera này không hỗ trợ"
+#: center_stage/gui_qt.py
+msgid "Take 4 photos"
+msgstr "Chụp 4 ảnh"
 
-#~ msgid "Center Stage is off"
-#~ msgstr "Center Stage đang tắt"
+#: center_stage/gui_qt.py
+msgid "Record"
+msgstr "Quay"
 
-#~ msgid "Opening camera…"
-#~ msgstr "Đang mở camera…"
+#: center_stage/gui_qt.py
+msgid "Recording could not be saved"
+msgstr "Không thể lưu bản quay"
 
-#~ msgid "Center Stage is ready"
-#~ msgstr "Center Stage đã sẵn sàng"
+#: center_stage/gui_qt.py
+msgid "Update checking is not available in this build."
+msgstr "Bản này không hỗ trợ kiểm tra cập nhật."
 
-#~ msgid "Settings"
-#~ msgstr "Cài đặt"
+#: center_stage/gui_qt.py
+msgid "Checking for updates…"
+msgstr "Đang kiểm tra cập nhật…"
 
-#~ msgid "Choose a camera, then select Start to create your virtual camera."
-#~ msgstr "Chọn camera rồi nhấn Bắt đầu để tạo camera ảo."
+#: center_stage/gui_qt.py
+msgid "Center Stage is up to date"
+msgstr "Center Stage đã là bản mới nhất"
 
-#~ msgid "Start"
-#~ msgstr "Bắt đầu"
+#: center_stage/gui_qt.py
+msgid "Center Stage is up to date."
+msgstr "Center Stage đã là bản mới nhất."
 
-#~ msgid "Auto Zoom"
-#~ msgstr "Tự động thu phóng"
-
-#~ msgid "Image Settings"
-#~ msgstr "Điều chỉnh hình ảnh"
-
-#~ msgid "Select a connected camera first."
-#~ msgstr "Hãy chọn một camera đang kết nối trước."
-
-#~ msgid "Restarting…"
-#~ msgstr "Đang khởi động lại…"
-
-#~ msgid "Starting…"
-#~ msgstr "Đang khởi động…"
+#: center_stage/gui_qt.py
+msgid "Center Stage {version} is available."
+msgstr "Đã có Center Stage {version}."

@@ -9,6 +9,7 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 
 from center_stage.media import (
+    GST_AVAILABLE,
     format_duration,
     four_up,
     list_media,
@@ -68,6 +69,7 @@ class MediaTests(unittest.TestCase):
         self.assertEqual(preview.frame.shape, (64, 112, 3))
         self.assertIsNone(preview.duration_seconds)
 
+    @unittest.skipUnless(GST_AVAILABLE, "GStreamer is not installed")
     def test_duration_format_and_recording_quality_contract(self):
         self.assertEqual(format_duration(65), "1:05")
         self.assertEqual(format_duration(3661), "1:01:01")
@@ -90,6 +92,7 @@ class MediaTests(unittest.TestCase):
             media = list_media_folders(folders)
         self.assertEqual([path.parent.name for path in media], ["Legacy", "Videos", "Pictures"])
 
+    @unittest.skipUnless(GST_AVAILABLE, "GStreamer is not installed")
     def test_recording_moves_across_filesystems_atomically(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
