@@ -171,7 +171,7 @@ change is part of the translation update.
 
 ## Release process
 
-The maintainer follows this sequence:
+The maintainer follows [docs/RELEASE_CHECKLIST.md](docs/RELEASE_CHECKLIST.md). In short:
 
 1. Confirm `VERSION` and runtime version agree.
 2. Run the default tests, `msgfmt`, and any available hardware/opt-in checks.
