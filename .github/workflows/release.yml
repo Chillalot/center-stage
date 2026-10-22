@@ -57,6 +57,9 @@ jobs:
       - name: Build .deb
         run: packaging/build_deb.sh
 
+      - name: Validate Debian package
+        run: .venv/bin/python -m unittest tests.test_package -v
+
       - name: Build AppImage
         run: PYTHON=.venv/bin/python packaging/appimage/build_appimage.sh
 
