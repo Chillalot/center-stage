@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security policy
+    url: https://github.com/Chillalot/center-stage/security/policy
+    about: Report vulnerabilities privately; do not open a public issue.
+  - name: Contributing guide
+    url: https://github.com/Chillalot/center-stage/blob/main/CONTRIBUTING.md
+    about: Development setup, tests, and pull request rules.

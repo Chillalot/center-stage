@@ -182,11 +182,13 @@ jobs:
 
           ### Verification
 
-          Download \`SHA256SUMS.txt\` and verify the asset before running it:
+          Download the checksum file for your platform and verify the asset:
 
           \`\`\`sh
-          sha256sum -c SHA256SUMS.txt
+          sha256sum -c SHA256SUMS-linux.txt
           \`\`\`
+
+          On Windows, compare the file hash with \`SHA256SUMS-windows.txt\`.
 
           The in-app update checker uses the same checksums and the stable
           download names above.

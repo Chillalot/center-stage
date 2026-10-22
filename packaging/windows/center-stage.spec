@@ -12,6 +12,8 @@ datas = [
     (str(ROOT / "blaze_face_short_range.tflite"), "."),
     (str(ROOT / "selfie_segmenter_landscape.tflite"), "."),
     (str(ROOT / "VERSION"), "."),
+    (str(ROOT / "LICENSE"), "."),
+    (str(ROOT / "THIRD_PARTY_NOTICES.md"), "."),
     (str(ROOT / "build" / "locale"), "locale"),
     (str(ROOT / "packaging" / "icons"), "icons"),
     (str(ROOT / "packaging" / "center-stage.svg"), "icons"),
