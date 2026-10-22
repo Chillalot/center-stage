@@ -37,7 +37,7 @@ class DebianPackageTests(unittest.TestCase):
         self.assertIn("center-stage-active.svg", contents)
         self.assertIn("center-stage-idle.svg", contents)
         self.assertIn("center-stage-warning.svg", contents)
-        self.assertIn("center-stage-256.png", contents)
+        self.assertIn("apps/center-stage.png", contents)
         self.assertIn("selfie_segmenter_landscape.tflite", contents)
         self.assertNotIn("pipewire-bin", metadata)
         self.assertIn("gstreamer1.0-pipewire", metadata)
