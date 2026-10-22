@@ -1,0 +1,103 @@
+name: Bug report
+description: Report a reproducible problem in Center Stage
+title: "bug: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. Please remove personal data and secrets from
+        logs before posting. For security issues, use the private security
+        policy instead of this form.
+
+  - type: input
+    id: version
+    attributes:
+      label: Center Stage version
+      description: The version from the title bar, `--version`, or the release tag.
+      placeholder: 5.0.0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - Linux Mint 22.x
+        - Ubuntu 24.04
+        - Windows 11
+        - Windows 10 22H2
+        - Other Linux distribution
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: install
+    attributes:
+      label: Installation method
+      options:
+        - Linux .deb package
+        - Linux AppImage
+        - Windows installer
+        - Windows portable ZIP
+        - Built from source
+    validations:
+      required: true
+
+  - type: input
+    id: hardware
+    attributes:
+      label: Camera and microphone
+      description: Model names help reproduce Media Foundation, PipeWire, or OBS issues.
+      placeholder: Logitech C920, built-in microphone
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps
+      description: List the shortest sequence that reliably triggers the bug.
+      placeholder: |
+        1. Open Center Stage
+        2. Select ...
+        3. Click ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Include the exact error text or a screenshot when possible.
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: |
+        Linux: ~/.local/state/center-stage/gui.log
+        Windows: %LOCALAPPDATA%\center-stage\gui.log
+        Paste only the relevant section and redact personal information.
+      render: shell
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues and this is not a duplicate.
+          required: true
+        - label: I verified the release checksum before running the build.
+          required: false
+        - label: I removed personal data, tokens, and secrets from this report.
+          required: true
