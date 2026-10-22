@@ -29,6 +29,7 @@ mkdir -p \
     "$PACKAGE_ROOT/usr/share/applications" \
     "$PACKAGE_ROOT/usr/share/icons/hicolor/scalable/apps" \
     "$PACKAGE_ROOT/usr/share/icons/hicolor/256x256/apps" \
+    "$PACKAGE_ROOT/usr/share/doc/center-stage" \
     "$PACKAGE_ROOT/usr/share/locale/vi/LC_MESSAGES" \
     "$PACKAGE_ROOT/etc/modules-load.d" \
     "$PACKAGE_ROOT/etc/modprobe.d"
@@ -112,6 +113,8 @@ install -m 0644 "$PROJECT_DIR/packaging/center-stage-idle.svg" "$PACKAGE_ROOT/us
 install -m 0644 "$PROJECT_DIR/packaging/center-stage-active.svg" "$PACKAGE_ROOT/usr/share/icons/hicolor/scalable/apps/"
 install -m 0644 "$PROJECT_DIR/packaging/center-stage-warning.svg" "$PACKAGE_ROOT/usr/share/icons/hicolor/scalable/apps/"
 install -m 0644 "$PROJECT_DIR/packaging/icons/center-stage-256.png" "$PACKAGE_ROOT/usr/share/icons/hicolor/256x256/apps/center-stage.png"
+install -m 0644 "$PROJECT_DIR/LICENSE" "$PACKAGE_ROOT/usr/share/doc/center-stage/copyright"
+install -m 0644 "$PROJECT_DIR/THIRD_PARTY_NOTICES.md" "$PACKAGE_ROOT/usr/share/doc/center-stage/THIRD_PARTY_NOTICES.md"
 install -m 0644 "$PROJECT_DIR/packaging/modules-load.conf" "$PACKAGE_ROOT/etc/modules-load.d/center-stage.conf"
 install -m 0644 "$PROJECT_DIR/packaging/modprobe.conf" "$PACKAGE_ROOT/etc/modprobe.d/center-stage.conf"
 install -m 0755 "$PROJECT_DIR/packaging/postinst" "$PACKAGE_ROOT/DEBIAN/postinst"

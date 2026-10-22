@@ -49,6 +49,7 @@ mkdir -p "$APP_DIR" "$VENDOR" "$APPDIR/usr/bin" \
     "$APPDIR/usr/share/applications" \
     "$APPDIR/usr/share/icons/hicolor/scalable/apps" \
     "$APPDIR/usr/share/metainfo" \
+    "$APPDIR/usr/share/doc/center-stage" \
     "$OUTPUT_DIR"
 
 if [ "$SKIP_DEPS" -eq 0 ]; then
@@ -78,6 +79,9 @@ install -m 0644 "$ROOT/packaging/center-stage.svg" \
     "$APPDIR/center-stage.svg"
 install -m 0644 "$ROOT/packaging/center-stage.svg" \
     "$APPDIR/usr/share/icons/hicolor/scalable/apps/center-stage.svg"
+install -m 0644 "$ROOT/LICENSE" "$APPDIR/usr/share/doc/center-stage/LICENSE"
+install -m 0644 "$ROOT/THIRD_PARTY_NOTICES.md" \
+    "$APPDIR/usr/share/doc/center-stage/THIRD_PARTY_NOTICES.md"
 cat >"$APPDIR/usr/bin/center-stage" <<'EOF'
 #!/bin/sh
 APPDIR=$(cd -- "$(dirname -- "$0")/../.." && pwd)
